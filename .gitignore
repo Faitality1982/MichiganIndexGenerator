@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+build/
+*.spec
+!michigan_index.spec
+.DS_Store
+Thumbs.db
+-e 
+# Built binaries
+dist/
