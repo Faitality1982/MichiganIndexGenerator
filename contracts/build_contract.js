@@ -1,180 +1,213 @@
 const fs = require('fs');
 const {
-  Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
-  PageOrientation, BorderStyle, PageBreak, UnderlineType,
-  Footer, PageNumber,
+  Document, Packer, Paragraph, TextRun, AlignmentType,
+  PageOrientation, BorderStyle, UnderlineType,
+  Footer, PageNumber, Table, TableRow, TableCell, WidthType, VerticalAlign, HeightRule,
 } = require('docx');
 
 const FONT = 'Calibri';
+const BODY = 21;          // 10.5pt
+const CONTENT_W = 10400;  // 12240 page - 920 - 920 margins
 
-// ---------- helpers ----------
-const t = (text, opts = {}) => new TextRun({ text, font: FONT, size: opts.size || 21, ...opts });
+// ---------- run helpers ----------
+const t = (text, opts = {}) => new TextRun({ text, font: FONT, size: opts.size || BODY, ...opts });
+const b = (text, opts = {}) => t(text, { bold: true, ...opts });
+const checkbox = () => new TextRun({ text: '☐  ', font: 'Segoe UI Symbol', size: 22 });
 
-// body paragraph from an array of runs
+// Non-breaking spaces so the underline actually renders — Word and LibreOffice
+// both trim trailing ordinary spaces, which erases an underlined run.
+const nb = (n) => ' '.repeat(n);
+// Short inline blanks use literal underscores: an underlined whitespace run gets
+// trimmed at layout time and the rule vanishes. Full-width fields use table borders.
+const us = (n) => '_'.repeat(n);
+const ul = (n) => t(us(n));
+
+// ---------- paragraph helpers ----------
 const P = (children, opts = {}) =>
   new Paragraph({
     children,
-    spacing: { after: opts.after === undefined ? 120 : opts.after, line: 252 },
+    spacing: { after: opts.after === undefined ? 110 : opts.after, line: 250 },
     alignment: opts.alignment,
     indent: opts.indent,
     keepNext: opts.keepNext,
     border: opts.border,
   });
 
-// plain text paragraph
 const p = (text, opts = {}) => P([t(text, opts)], opts);
 
-// numbered clause, hanging indent
 const clause = (num, runs, opts = {}) =>
   new Paragraph({
-    children: [t(num + ') ', { bold: true }), ...runs],
-    spacing: { after: opts.after === undefined ? 160 : opts.after, line: 252 },
+    children: [b(num + ') '), ...runs],
+    spacing: { after: opts.after === undefined ? 130 : opts.after, line: 250 },
     indent: { left: 360, hanging: 360 },
   });
 
-// "Initial: ____" line, right-ish
-const initialLine = (label) =>
+const initialLine = () =>
   new Paragraph({
-    children: [
-      t((label || 'Initial') + ': ', { bold: true }),
-      t('___________', { bold: true }),
-    ],
-    spacing: { after: 200, line: 252 },
+    children: [b('Initial: '), b(us(22))],
+    spacing: { after: 140, line: 250 },
     indent: { left: 360 },
-  });
-
-const blank = (n) => ' '.repeat(n);
-const ul = (text) => t(text, { underline: { type: UnderlineType.SINGLE } });
-
-// checkbox glyph — Segoe UI Symbol renders U+2610 reliably in Word
-const checkbox = () => new TextRun({ text: '☐  ', font: 'Segoe UI Symbol', size: 22 });
-
-// fill-in line: "Label: ______________"
-const fillIn = (label, len, opts = {}) =>
-  new Paragraph({
-    children: [t(label + ' ', { bold: opts.bold }), ul(blank(len || 40))],
-    spacing: { after: opts.after === undefined ? 160 : opts.after, line: 300 },
-    indent: opts.indent,
   });
 
 const sectionHeading = (text) =>
   new Paragraph({
-    children: [t(text, { bold: true, size: 24, allCaps: false })],
-    spacing: { before: 200, after: 160 },
+    children: [b(text, { size: 24 })],
+    spacing: { before: 150, after: 130 },
     keepNext: true,
   });
 
-const rule = () =>
+const rule = (after) =>
   new Paragraph({
     children: [t('')],
     border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '000000', space: 1 } },
-    spacing: { after: 160 },
+    spacing: { after: after === undefined ? 140 : after },
   });
 
-const pageBreak = () => new Paragraph({ children: [new PageBreak()] });
+
+// ---------- form-field tables ----------
+// A borderless table; cells flagged `line` get a bottom border, which produces a
+// straight rule that runs the full width of its column.
+const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+const noBorders = {
+  top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER,
+  insideHorizontal: NO_BORDER, insideVertical: NO_BORDER,
+};
+
+const cell = (width, children, opts = {}) =>
+  new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    borders: opts.line
+      ? { ...noBorders, bottom: { style: BorderStyle.SINGLE, size: 6, color: '000000' } }
+      : noBorders,
+    verticalAlign: VerticalAlign.BOTTOM,
+    margins: { top: 20, bottom: 20, left: 0, right: opts.right === undefined ? 100 : opts.right },
+    children,
+  });
+
+const labelCell = (width, text) =>
+  cell(width, [new Paragraph({ children: [b(text)], spacing: { after: 0, line: 240 } })]);
+
+const lineCell = (width) =>
+  cell(width, [new Paragraph({ children: [t('')], spacing: { after: 0, line: 240 } })], { line: true });
+
+// rows: array of arrays of {label, w} / {line, w}
+const fieldTable = (rows, colWidths, opts = {}) =>
+  new Table({
+    columnWidths: colWidths,
+    width: { size: CONTENT_W, type: WidthType.DXA },
+    borders: noBorders,
+    rows: rows.map(
+      (cells) =>
+        new TableRow({
+          height: opts.height
+            ? { value: opts.height, rule: HeightRule.ATLEAST }
+            : undefined,
+          children: cells.map((c) =>
+            c.label !== undefined ? labelCell(c.w, c.label) : lineCell(c.w)
+          ),
+        })
+    ),
+  });
+
+const spacer = (h) => new Paragraph({ children: [t('')], spacing: { after: h === undefined ? 120 : h, line: 120 } });
 
 // ---------- letterhead ----------
+const ctr = (text, opts) =>
+  new Paragraph({
+    children: [t(text, opts)],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: opts && opts.after !== undefined ? opts.after : 30, line: 240 },
+  });
+
 const letterhead = [
-  new Paragraph({
-    children: [t('HIGH CALIBER ESTATE SALES LLC', { bold: true, size: 40 })],
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 40 },
-  }),
-  new Paragraph({
-    children: [t('Professional Estate Liquidation — Serving Metro Detroit', { size: 20, italics: true })],
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 100 },
-  }),
-  new Paragraph({
-    children: [t('32055 Wilson Drive, Warren, MI  [ZIP]', { size: 20 })],
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 20 },
-  }),
-  new Paragraph({
-    children: [t('Phone: [PHONE]   •   Email: [EMAIL]   •   highcaliberestatesales.com', { size: 20 })],
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 20 },
-  }),
-  new Paragraph({
-    children: [t('Owner: [OWNER NAME]', { size: 20 })],
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 160 },
-  }),
-  rule(),
+  ctr('HIGH CALIBER ESTATE SALES LLC', { bold: true, size: 36, after: 30 }),
+  ctr('Professional Estate Liquidation — Serving Metro Detroit', { size: 19, italics: true, after: 55 }),
+  ctr('32055 Wilson Drive, Warren, MI  [ZIP]', { size: 19 }),
+  ctr('Phone: [PHONE]   •   Email: [EMAIL]   •   highcaliberestatesales.com', { size: 19 }),
+  ctr('Owner: [OWNER NAME]', { size: 19, after: 80 }),
+  rule(90),
 ];
 
-// running header for pages 2+
-const runningHead = [
+const runningHead = () => [
   new Paragraph({
-    children: [t('HIGH CALIBER ESTATE SALES LLC', { bold: true, size: 28 })],
+    children: [b('HIGH CALIBER ESTATE SALES LLC', { size: 26 })],
     alignment: AlignmentType.CENTER,
-    spacing: { after: 40 },
+    spacing: { after: 30, line: 240 },
+    pageBreakBefore: true,
   }),
-  rule(),
+  rule(130),
 ];
 
-// ---------- document body ----------
+// ---------- body ----------
 const body = [];
 
 // ===== PAGE 1 =====
 body.push(...letterhead);
+body.push(ctr('AGREEMENT TO CONDUCT ESTATE SALE', { bold: true, size: 27, after: 150 }));
 
-body.push(new Paragraph({
-  children: [t('AGREEMENT TO CONDUCT ESTATE SALE', { bold: true, size: 28 })],
-  alignment: AlignmentType.CENTER,
-  spacing: { after: 240 },
-}));
+body.push(fieldTable(
+  [
+    [{ label: 'Start Date of Services:', w: 2950 }, { line: true, w: 7490 }],
+    [{ label: 'Date(s) of Sale:', w: 2950 }, { line: true, w: 7490 }],
+  ],
+  [2950, 7490]
+));
+body.push(spacer(70));
 
-body.push(fillIn('Start Date of Services:', 34));
-body.push(fillIn('Date(s) of Sale:', 40));
+body.push(p('Thank you for selecting High Caliber Estate Sales LLC to liquidate the contents of the estate known as:', { after: 110 }));
 
-body.push(p('Thank you for selecting High Caliber Estate Sales LLC to liquidate the contents of the estate known as:', { after: 160 }));
+body.push(fieldTable(
+  [
+    [{ label: 'Address:', w: 1150 }, { line: true, w: 9290 }],
+  ],
+  [1150, 9290]
+));
+body.push(fieldTable(
+  [
+    [
+      { label: 'City:', w: 750 }, { line: true, w: 4300 },
+      { label: 'State:', w: 900 }, { line: true, w: 1400 },
+      { label: 'Zip:', w: 640 }, { line: true, w: 2450 },
+    ],
+  ],
+  [750, 4300, 900, 1400, 640, 2450]
+));
+body.push(spacer(90));
 
-body.push(fillIn('Address:', 60));
-body.push(new Paragraph({
-  children: [t('City: ', {}), ul(blank(28)), t('   State: ', {}), ul(blank(8)), t('   Zip: ', {}), ul(blank(12))],
-  spacing: { after: 200, line: 300 },
-}));
-
-body.push(new Paragraph({
-  children: [t('The Estate Sale will be held ON SITE.', { bold: true, underline: { type: UnderlineType.SINGLE } })],
-  spacing: { after: 200 },
-}));
+body.push(P([b('The Estate Sale will be held ON SITE.', { underline: { type: UnderlineType.SINGLE } })], { after: 110 }));
 
 body.push(P([
   t('High Caliber Estate Sales LLC (also referred to in this Agreement as the ', { italics: true, bold: true }),
   t('"Liquidator"', { italics: true, bold: true }),
   t(') shall provide the following services in connection with the sale of the personal property located at the premises of the estate:', { italics: true, bold: true }),
-], { after: 200 }));
+], { after: 110 }));
 
 body.push(sectionHeading('THE LIQUIDATOR SHALL:'));
 
 body.push(clause('1', [
   t('Sort, organize, arrange, and display all items to be sold. If, during that process, we encounter items that appear to be of unusual value or of special sentimental value that you have not told us about, we will consult with you before pricing or selling them. We will use the tables, shelves, cabinets, and similar surfaces available at the premises for display, and we will supply any additional display equipment we consider necessary. The Liquidator will gather and dispose of unsold items that cannot be sold, using ordinary garbage pickup where possible. If the volume or size of the discarded items exceeds ordinary pickup, the Liquidator will arrange for a dumpster and the Seller will pay the dumpster cost.'),
-]));
+], { after: 110 }));
 body.push(initialLine());
 
-body.push(P([t('The Liquidator will clean and polish selected items being sold — such as silverware, fine china, furniture, and similar goods — where doing so is necessary to present them well.')], { after: 160 }));
+body.push(p('The Liquidator will clean and polish selected items being sold — such as silverware, fine china, furniture, and similar goods — where doing so is necessary to present them well.', { after: 110 }));
 
 body.push(P([
-  t('We do NOT clean the home, windows, floors, walls, carpeting, or similar surfaces after the sale has concluded, and we cannot be held liable for soiled or worn flooring.', { bold: true, underline: { type: UnderlineType.SINGLE } }),
-], { after: 120 }));
+  b('We do NOT clean the home, windows, floors, walls, carpeting, or similar surfaces after the sale has concluded, and we cannot be held liable for soiled or worn flooring.', { underline: { type: UnderlineType.SINGLE } }),
+], { after: 100 }));
 body.push(initialLine());
 
-body.push(P([
-  t('If you would like our staff to wear shoe covers (booties) during the sale, initial here:', { bold: true }),
-], { after: 120 }));
+body.push(P([b('If you would like our staff to wear shoe covers (booties) during the sale, initial here:')], { after: 100 }));
 body.push(initialLine());
 
 body.push(clause('2', [
   t('Price the property using tags, labels, or signs. During the course of the Estate Sale the Liquidator shall have full authority to negotiate prices with customers.'),
-]));
+], { after: 120 }));
 
-body.push(P([t('The number of days your sale runs determines the discount schedule:', { bold: true })], { after: 120 }));
+body.push(P([b('The number of days your sale runs determines the discount schedule:')], { after: 100 }));
 
 const dayLine = (label, text) => new Paragraph({
-  children: [checkbox(), t(label, { bold: true }), t(text)],
-  spacing: { after: 80, line: 252 },
+  children: [checkbox(), b(label), t(text)],
+  spacing: { after: 75, line: 250 },
   indent: { left: 720, hanging: 360 },
 });
 
@@ -182,41 +215,47 @@ body.push(dayLine('One-day sale: ', 'Full price / half way through the sale day,
 body.push(dayLine('Two-day sale: ', 'Day One = full price / Day Two = 50% off and a $5 bag.'));
 body.push(dayLine('Three-day sale: ', 'Day One = full price / Day Two = 25% off / Day Three = 50% off and a $5 bag.'));
 body.push(dayLine('Four-day sale: ', 'Day One = full price / Day Two = 25% off / Day Three = 50% off / Day Four = 75% off and a $5 bag.'));
-
 body.push(new Paragraph({
-  children: [checkbox(), t('Custom discount schedule: ', { bold: true })],
-  spacing: { after: 100, line: 252 },
+  children: [checkbox(), b('Custom discount schedule:')],
+  spacing: { after: 90, line: 240 },
   indent: { left: 720, hanging: 360 },
 }));
-body.push(new Paragraph({
-  children: [
-    t('Day One: '), ul(blank(14)), t('   Day Two: '), ul(blank(14)),
-    t('   Day Three: '), ul(blank(14)), t('   Day Four: '), ul(blank(14)),
-  ],
-  spacing: { after: 160, line: 300 },
-  indent: { left: 720 },
+
+body.push(new Table({
+  columnWidths: [1220, 1210, 1220, 1210, 1430, 1000, 1220, 1210],
+  width: { size: CONTENT_W, type: WidthType.DXA },
+  borders: noBorders,
+  indent: { size: 720, type: WidthType.DXA },
+  rows: [new TableRow({
+    children: [
+      labelCell(1220, 'Day One:'), lineCell(1210),
+      labelCell(1220, 'Day Two:'), lineCell(1210),
+      labelCell(1430, 'Day Three:'), lineCell(1000),
+      labelCell(1220, 'Day Four:'), lineCell(1210),
+    ],
+  })],
 }));
+body.push(spacer(90));
 body.push(initialLine());
 
 // ===== PAGE 2 =====
-body.push(pageBreak());
-body.push(...runningHead);
+body.push(...runningHead());
 
 body.push(clause('3', [
   t('The Seller shall '),
-  t('NOT', { bold: true, underline: { type: UnderlineType.SINGLE } }),
+  b('NOT', { underline: { type: UnderlineType.SINGLE } }),
   t(' change the price of any item. The Liquidator reserves the right to remove items from the premises for research, appraisal, or safekeeping, and to lock up small or high-value items. Any such item will be priced in the best interest of the Seller.'),
-]));
+], { after: 110 }));
 body.push(initialLine());
 
 body.push(clause('4', [
   t('Advertise the Estate Sale at the Liquidator’s expense through EstateSales.net, Facebook, Instagram, neighborhood apps, and selected local newspapers. The Liquidator will also place signs in the yard during the sale and additional directional signs in the vicinity of the sale where permitted by local ordinance.'),
-]));
+], { after: 110 }));
 body.push(initialLine());
 
 body.push(clause('5', [
   t('Use reasonable efforts to maintain security at the premises and to prevent theft. Unfortunately, experience has shown that some minor theft by customers is inevitable at any public sale. We will, however, take reasonable steps to guard against it — for example, by stationing personnel near small, high-value items — and we will supply an adequate number of staff to work the sale. If we recommend it for a particular sale, we may also hire one or more off-duty police officers to provide security, at a cost to the Seller.'),
-]));
+], { after: 110 }));
 body.push(initialLine());
 
 body.push(clause('6', [
@@ -225,36 +264,37 @@ body.push(clause('6', [
 
 body.push(clause('7', [
   t('Within fifteen (15) business days after the conclusion of the Estate Sale, High Caliber Estate Sales LLC will distribute the net proceeds of the Estate Sale to the Seller. '),
-  t('"Net Proceeds"', { bold: true }),
+  b('"Net Proceeds"'),
   t(' shall mean the amount collected by the Liquidator from the sale of the property, less the Liquidator’s commission and any expenses chargeable to the Seller under this Agreement.'),
-]));
+], { after: 120 }));
 
 body.push(new Paragraph({
   children: [
     t('Our fee for providing the services described above is '),
-    ul(blank(8)),
-    t('% of gross sale proceeds, and '),
-    ul(blank(8)),
-    t('% of gross proceeds on titled vehicles, tractors, boats, trailers, and similar titled property.'),
+    b(us(8)),
+    b('% '),
+    t('of gross sale proceeds, and '),
+    b(us(8)),
+    b('% '),
+    t('of gross proceeds on titled vehicles, tractors, boats, trailers, and similar titled property.'),
   ],
-  spacing: { after: 160, line: 300 },
+  spacing: { after: 120, line: 240 },
   indent: { left: 360 },
 }));
 
 body.push(P([
   t('Our commission is payable on all items we have been told will be included in the sale at the time this Agreement is signed. Because our decision to accept this sale over other estate sale opportunities — and all of our planning and preparation for it — is based on the quantity and quality of the items represented to us, we strongly discourage the removal of items after we have been hired.'),
-], { after: 160, indent: { left: 360 } }));
+], { after: 120, indent: { left: 360 } }));
 
 body.push(P([
-  t('If ANY items are removed after we have begun working on the sale, we reserve the right to appraise the removed items and to deduct ', { bold: true }),
-  t('_______%', { bold: true, underline: { type: UnderlineType.SINGLE } }),
-  t(' of the appraised value from the Seller’s share of the proceeds of the sale, although we will always attempt to be fair, reasonable, and understanding in that regard.', { bold: true }),
-], { after: 120, indent: { left: 360 } }));
+  b('If ANY items are removed after we have begun working on the sale, we reserve the right to appraise the removed items and to deduct '),
+  b(us(8)),
+  b('% of the appraised value from the Seller’s share of the proceeds of the sale, although we will always attempt to be fair, reasonable, and understanding in that regard.'),
+], { after: 110, indent: { left: 360 } }));
 body.push(initialLine());
 
 // ===== PAGE 3 =====
-body.push(pageBreak());
-body.push(...runningHead);
+body.push(...runningHead());
 
 body.push(sectionHeading('THE SELLER SHALL:'));
 
@@ -262,15 +302,21 @@ body.push(clause('1', [
   t('Grant High Caliber Estate Sales LLC and its employees 24/7 access to the premises during all access dates. The premises shall be unoccupied from the access date onward. If access is restricted in any way, or if any persons or animals occupy the home or remain on the premises, the Seller agrees to leave the Liquidator’s setup completely alone and untouched.'),
 ]));
 
-body.push(new Paragraph({
-  children: [t('2) ', { bold: true }), t('Furnish the Liquidator with keys and security codes to the premises: '), ul(blank(24))],
-  spacing: { after: 160, line: 300 },
-  indent: { left: 360, hanging: 360 },
+body.push(clause('2', [
+  t('Furnish the Liquidator with keys and security codes to the premises:'),
+], { after: 60 }));
+body.push(new Table({
+  columnWidths: [9720],
+  width: { size: 9720, type: WidthType.DXA },
+  borders: noBorders,
+  indent: { size: 720, type: WidthType.DXA },
+  rows: [new TableRow({ children: [lineCell(9720)] })],
 }));
+body.push(spacer(90));
 
 body.push(clause('3', [
   t('Before the access date of the Estate Sale, remove from the premises — or secure in a locked room or container — all personal items that are '),
-  t('not for sale (NFS)', { bold: true }),
+  b('not for sale (NFS)'),
   t(', and all other property on the premises that is not to be sold. Any item not removed or secured by a locked method will be considered part of the Estate Sale.'),
 ]));
 
@@ -288,10 +334,11 @@ body.push(clause('6', [
 
 body.push(clause('7', [
   t('Not remove '),
-  t('any', { bold: true, underline: { type: UnderlineType.SINGLE } }),
+  b('any', { underline: { type: UnderlineType.SINGLE } }),
   t(' property from the premises after the date this Agreement is signed, except as set forth in Paragraph 3 above. If any property is removed from the premises after the date of this Agreement, the Liquidator reserves the right to appraise the removed items, and the Seller shall pay the Liquidator a fee equal to '),
-  t('_______%', { bold: true, underline: { type: UnderlineType.SINGLE } }),
-  t(' of the price established by the Liquidator for such items, to renegotiate the terms of this Agreement, or to cancel this Agreement.'),
+  b(us(8)),
+  b('% '),
+  t('of the price established by the Liquidator for such items, to renegotiate the terms of this Agreement, or to cancel this Agreement.'),
 ]));
 
 body.push(clause('8', [
@@ -300,122 +347,137 @@ body.push(clause('8', [
 
 body.push(clause('9', [
   t('Be responsible for arranging approval of the Estate Sale with any homeowner’s association connected to the premises and for paying any associated fees.'),
-]));
+], { after: 200 }));
 
-body.push(new Paragraph({
-  children: [t('Seller agrees to Paragraphs 1–9 above.   Signature: ', { bold: true }), ul(blank(40))],
-  spacing: { before: 240, after: 200, line: 300 },
-}));
+body.push(P([b('Seller agrees to Paragraphs 1–9 above.')], { after: 130 }));
+body.push(fieldTable(
+  [[{ label: 'Seller Signature:', w: 2400 }, { line: true, w: 4840 }, { label: 'Date:', w: 750 }, { line: true, w: 2450 }]],
+  [2400, 4840, 750, 2450],
+  { height: 460 }
+));
 
 // ===== PAGE 4 =====
-body.push(pageBreak());
-body.push(...runningHead);
+body.push(...runningHead());
 
 body.push(sectionHeading('ADDITIONAL TERMS'));
 
-const term = (label, text) => new Paragraph({
-  children: [t(label, { bold: true }), t(text)],
-  spacing: { after: 160, line: 252 },
-});
+body.push(p('Seller represents that the Estate has good title to the property, has the power to sell the property without the consent of any other party, and that the property is free and clear of all liens and encumbrances.', { after: 130 }));
 
-body.push(p('Seller represents that the Estate has good title to the property, has the power to sell the property without the consent of any other party, and that the property is free and clear of all liens and encumbrances.', { after: 160 }));
-
-body.push(p('Acceptance by the Seller of the net proceeds shall release the Liquidator from any further liability under this Agreement.', { after: 160 }));
+body.push(p('Acceptance by the Seller of the net proceeds shall release the Liquidator from any further liability under this Agreement.', { after: 130 }));
 
 body.push(P([
-  t('Venue: ', { bold: true }),
+  b('Venue: '),
   t('Venue for the resolution of any dispute through civil litigation shall be in the 37th District Court, City of Warren, Macomb County, Michigan, or in the Macomb County Circuit Court, as jurisdiction allows. This Agreement is governed by the laws of the State of Michigan.'),
-], { after: 160 }));
+], { after: 130 }));
 
 body.push(P([
-  t('Cancellation by Seller: ', { bold: true }),
+  b('Cancellation by Seller: '),
   t('Should the Seller cancel this Agreement for any reason, the Seller will pay the Liquidator a cancellation fee of $'),
-  ul(blank(10)),
+  b(us(12)),
   t(', and will reimburse the Liquidator for all expenses incurred in connection with the Estate Sale prior to cancellation.'),
-], { after: 160 }));
+], { after: 130 }));
 
-body.push(p('The Liquidator will provide its services on a "best efforts" basis, without warranty of any kind, express or implied. The Liquidator does not guarantee that the Estate Sale will generate any minimum level of revenue.', { after: 160 }));
+body.push(p('The Liquidator will provide its services on a "best efforts" basis, without warranty of any kind, express or implied. The Liquidator does not guarantee that the Estate Sale will generate any minimum level of revenue.', { after: 130 }));
 
-body.push(p('Services are subject to cancellation if the Seller is found to be in violation of this Agreement, and the Liquidator reserves the right to terminate this Agreement for any reason.', { after: 160 }));
+body.push(p('Services are subject to cancellation if the Seller is found to be in violation of this Agreement, and the Liquidator reserves the right to terminate this Agreement for any reason.', { after: 130 }));
 
 body.push(P([
-  t('Weather: ', { bold: true }),
+  b('Weather: '),
   t('When we conduct a sale in Michigan, weather is always a factor, and we will not put anyone at risk during the winter months. If bad weather raises safety concerns, we will postpone and reschedule your sale. Any snow removal or salting required at the premises is at the Seller’s cost.'),
-], { after: 160 }));
-
-body.push(new Paragraph({
-  children: [t('Parking: ', { bold: true }), t('Please specify where parking is allowed on the property. '), ul(blank(30))],
-  spacing: { after: 100, line: 300 },
-}));
-body.push(new Paragraph({ children: [ul(blank(85))], spacing: { after: 160, line: 300 } }));
+], { after: 130 }));
 
 body.push(P([
-  t('Client at Sale: ', { bold: true }),
+  b('Parking: '),
+  t('Please specify where parking is allowed on the property.'),
+], { after: 70 }));
+body.push(fieldTable([[{ line: true, w: CONTENT_W }]], [CONTENT_W], { height: 420 }));
+body.push(fieldTable([[{ line: true, w: CONTENT_W }]], [CONTENT_W], { height: 420 }));
+body.push(spacer(110));
+
+body.push(P([
+  b('Client at Sale: '),
   t('You are, of course, welcome at the house during the setup and pricing process. During the sale days, however, we strongly recommend that the client not be in attendance. A client’s presence at a sale is emotionally difficult, is hard on our team, and deters customers from buying.'),
-], { after: 160 }));
+], { after: 130 }));
 
 body.push(P([
-  t('Sale of Property: ', { bold: true }),
+  b('Sale of Property: '),
   t('If the real property has been sold, please coordinate with your realtor. No new homeowner should receive keys until after the Estate Sale has been conducted, and no new homeowner should be present at the sale to measure for carpet, choose paint colors, or similar purposes.'),
-], { after: 200 }));
+], { after: 160 }));
 
 body.push(initialLine());
 
 // ===== PAGE 5 =====
-body.push(pageBreak());
-body.push(...runningHead);
+body.push(...runningHead());
 
 body.push(P([
-  t('Our business is built on referrals. ', { bold: true }),
+  b('Our business is built on referrals. '),
   t('Accordingly, it is important to us that you be happy with our service. Above all, we recognize that in entrusting your sale to us, you are relying on our honesty and integrity. We have always operated, and will always operate, to the highest standards of honesty and integrity.'),
-], { after: 160 }));
+], { after: 130 }));
 
-body.push(p('If you ever have any questions or concerns in that regard, please let us know. We have found that in almost all cases, potential problems can be avoided if we simply communicate with each other.', { after: 160 }));
+body.push(p('If you ever have any questions or concerns in that regard, please let us know. We have found that in almost all cases, potential problems can be avoided if we simply communicate with each other.', { after: 130 }));
 
-body.push(p('In addition, we recognize that every sale is different. We will make every effort to be flexible, to be fair, reasonable, and understanding, and to work within your schedule. We trust that you will do the same.', { after: 160 }));
+body.push(p('In addition, we recognize that every sale is different. We will make every effort to be flexible, to be fair, reasonable, and understanding, and to work within your schedule. We trust that you will do the same.', { after: 130 }));
 
-body.push(p('If this Agreement correctly reflects your understanding of our arrangement, please sign in the space provided below and return one copy to us. We appreciate this opportunity to serve you, and we look forward to a productive sale!', { after: 240 }));
+body.push(p('If this Agreement correctly reflects your understanding of our arrangement, please sign in the space provided below and return one copy to us. We appreciate this opportunity to serve you, and we look forward to a productive sale!', { after: 180 }));
 
-body.push(rule());
+body.push(rule(150));
+body.push(P([b('Liquidator:  High Caliber Estate Sales LLC', { size: 22 })], { after: 200 }));
 
-body.push(new Paragraph({
-  children: [t('Liquidator:  High Caliber Estate Sales LLC', { bold: true, size: 22 })],
-  spacing: { after: 240 },
-}));
+// Signature block — every rule runs the full width of the page.
+const LBL = 2800;
+const REST = CONTENT_W - LBL;
+const SIG_H = 460; // ~0.32in — room to actually write
 
-const sigLine = (label, len) => new Paragraph({
-  children: [t(label + ' ', { bold: true }), ul(blank(len))],
-  spacing: { after: 200, line: 320 },
-});
+body.push(fieldTable(
+  [
+    [{ label: 'Seller (signature):', w: LBL }, { line: true, w: REST }],
+    [{ label: 'Seller (print name):', w: LBL }, { line: true, w: REST }],
+    [{ label: 'Date Signed:', w: LBL }, { line: true, w: REST }],
+    [{ label: 'Seller’s Phone:', w: LBL }, { line: true, w: REST }],
+    [{ label: 'Email:', w: LBL }, { line: true, w: REST }],
+    [{ label: 'Address:', w: LBL }, { line: true, w: REST }],
+  ],
+  [LBL, REST],
+  { height: SIG_H }
+));
 
-body.push(sigLine('Seller (signature):', 46));
-body.push(sigLine('Seller (print name):', 46));
-body.push(sigLine('Date Signed:', 30));
-body.push(sigLine('Seller’s Phone:', 30));
-body.push(sigLine('Email:', 50));
-body.push(sigLine('Address:', 52));
-body.push(new Paragraph({
-  children: [t('City: ', { bold: true }), ul(blank(26)), t('  State: ', { bold: true }), ul(blank(8)), t('  Zip: ', { bold: true }), ul(blank(12))],
-  spacing: { after: 200, line: 320 },
-}));
-body.push(sigLine('Make check payable to:', 40));
+body.push(fieldTable(
+  [[
+    { label: 'City:', w: 750 }, { line: true, w: 4300 },
+    { label: 'State:', w: 900 }, { line: true, w: 1400 },
+    { label: 'Zip:', w: 640 }, { line: true, w: 2450 },
+  ]],
+  [750, 4300, 900, 1400, 640, 2450],
+  { height: SIG_H }
+));
 
-body.push(new Paragraph({
-  children: [t('Notes:', { bold: true })],
-  spacing: { after: 140, line: 320 },
-}));
-for (let i = 0; i < 4; i++) {
-  body.push(new Paragraph({ children: [ul(blank(88))], spacing: { after: 160, line: 320 } }));
-}
+body.push(fieldTable(
+  [[{ label: 'Make check payable to:', w: 2800 }, { line: true, w: CONTENT_W - 2800 }]],
+  [2800, CONTENT_W - 2800],
+  { height: SIG_H }
+));
+
+body.push(spacer(60));
+body.push(P([b('Notes:')], { after: 130 }));
+body.push(fieldTable(
+  [
+    [{ line: true, w: CONTENT_W }],
+    [{ line: true, w: CONTENT_W }],
+    [{ line: true, w: CONTENT_W }],
+    [{ line: true, w: CONTENT_W }],
+  ],
+  [CONTENT_W],
+  { height: SIG_H }
+));
 
 // ---------- assemble ----------
 const doc = new Document({
-  styles: { default: { document: { run: { font: FONT, size: 21 } } } },
+  styles: { default: { document: { run: { font: FONT, size: BODY } } } },
   sections: [{
     properties: {
       page: {
         size: { width: 12240, height: 15840, orientation: PageOrientation.PORTRAIT },
-        margin: { top: 720, right: 900, bottom: 720, left: 900 },
+        margin: { top: 700, right: 920, bottom: 640, left: 920 },
       },
     },
     footers: {
@@ -423,12 +485,14 @@ const doc = new Document({
         children: [
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 120 },
+            spacing: { before: 100 },
             children: [
-              t('High Caliber Estate Sales LLC — Agreement to Conduct Estate Sale     Seller Initials: ______     Page ', { size: 16 }),
-              new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 16 }),
-              t(' of ', { size: 16 }),
-              new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: 16 }),
+              t('High Caliber Estate Sales LLC — Agreement to Conduct Estate Sale     Seller Initials: ', { size: 15 }),
+              t(us(9), { size: 15 }),
+              t('     Page ', { size: 15 }),
+              new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 15 }),
+              t(' of ', { size: 15 }),
+              new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: 15 }),
             ],
           }),
         ],

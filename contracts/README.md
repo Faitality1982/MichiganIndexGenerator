@@ -2,6 +2,7 @@
 
 `High_Caliber_Estate_Sales_Agreement.docx` is a 5-page client-facing agreement
 to conduct an estate sale. `build_contract.js` regenerates it.
+`High_Caliber_Estate_Sales_Agreement.pdf` is a rendered preview.
 
 ## Regenerating
 
@@ -9,6 +10,27 @@ to conduct an estate sale. `build_contract.js` regenerates it.
 npm install docx
 node build_contract.js High_Caliber_Estate_Sales_Agreement.docx
 ```
+
+## Form-field formatting
+
+Fill-in rules are **bottom borders on borderless table cells**, not underlined
+spaces. An underlined whitespace run gets trimmed at layout time and the rule
+disappears — that is why the first draft rendered labels with no line after
+them. Table borders always draw, and the cell width sets exactly how far the
+rule runs, so every line reaches the right margin.
+
+Short inline blanks inside a sentence (`_____%`, `$_______`, `Initial: ____`)
+use literal underscore characters for the same reason.
+
+Signature rows set `HeightRule.ATLEAST` (~0.32 in) so there is room to write.
+
+Page breaks use `pageBreakBefore` on each section's running head rather than a
+standalone `PageBreak` paragraph — a standalone break paragraph lands on its own
+page when the preceding page is exactly full, which inserted a blank page 2.
+
+The body font is Calibri. When previewing on Linux, install
+`fonts-crosextra-carlito` first; without a metric-compatible font the
+substitute is wider and labels wrap that would not wrap in Word.
 
 ## Placeholders to fill before use
 
