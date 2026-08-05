@@ -1,8 +1,16 @@
 # High Caliber Estate Sales LLC — Estate Sale Agreement
 
-`High_Caliber_Estate_Sales_Agreement.docx` is a 5-page client-facing agreement
+`High_Caliber_Estate_Sales_Agreement.docx` is a 4-page client-facing agreement
 to conduct an estate sale. `build_contract.js` regenerates it.
 `High_Caliber_Estate_Sales_Agreement.pdf` is a rendered preview.
+
+## Logo
+
+Drop the company logo in this directory as `logo.png` or `logo.jpg` and rebuild.
+It is placed on the cover (scaled to 2.4 in wide) and in the running header on
+pages 2+ (scaled to 0.31 in tall, so a tall logo cannot grow into the body).
+Aspect ratio is read from the file, so the image is never distorted. With no
+logo file present the wordmark falls back to type.
 
 ## Regenerating
 
@@ -24,9 +32,21 @@ use literal underscore characters for the same reason.
 
 Signature rows set `HeightRule.ATLEAST` (~0.32 in) so there is room to write.
 
-Page breaks use `pageBreakBefore` on each section's running head rather than a
-standalone `PageBreak` paragraph — a standalone break paragraph lands on its own
-page when the preceding page is exactly full, which inserted a blank page 2.
+## Pagination
+
+Content flows continuously. There is exactly **one** forced break, on the
+"Our business is built on referrals" paragraph, so the closing letter and the
+whole signature block form a single unsplit signature page — without it the
+block splits mid-way across two pages.
+
+Never use a standalone `PageBreak` paragraph: when the preceding page is exactly
+full, the break paragraph itself lands on a fresh page and emits a blank one.
+Use `pageBreakBefore` on the paragraph that should start the page.
+
+The company name repeats on pages 2+ via a real page `Header` with
+`titlePage: true` (page 1 gets an empty first-page header, since it carries the
+full letterhead). Earlier drafts faked this with inline heading paragraphs, which
+forced a page break at every section and wasted roughly a page.
 
 The body font is Calibri. When previewing on Linux, install
 `fonts-crosextra-carlito` first; without a metric-compatible font the

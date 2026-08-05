@@ -1,13 +1,64 @@
 const fs = require('fs');
+const path = require('path');
 const {
   Document, Packer, Paragraph, TextRun, AlignmentType,
-  PageOrientation, BorderStyle, UnderlineType,
-  Footer, PageNumber, Table, TableRow, TableCell, WidthType, VerticalAlign, HeightRule,
+  PageOrientation, BorderStyle, UnderlineType, ImageRun,
+  Footer, Header, PageNumber, Table, TableRow, TableCell, WidthType, VerticalAlign, HeightRule,
 } = require('docx');
+
+// ---------- logo ----------
+// Drop the company logo next to this script as logo.png / logo.jpg and it is used
+// on the cover and in the running header. Without it, the wordmark is set in type.
+const LOGO_PATH = ['logo.png', 'logo.jpg', 'logo.jpeg']
+  .map((f) => path.join(__dirname, f))
+  .find((f) => fs.existsSync(f));
+
+// Intrinsic pixel size, so the logo is scaled to width without distorting it.
+function imageSize(buf, ext) {
+  if (ext === 'png') {
+    return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+  }
+  let i = 2; // JPEG: walk the segment chain to the SOF marker
+  while (i < buf.length) {
+    if (buf[i] !== 0xff) { i++; continue; }
+    const marker = buf[i + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+      return { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) };
+    }
+    i += 2 + buf.readUInt16BE(i + 2);
+  }
+  return null;
+}
+
+const logo = (() => {
+  if (!LOGO_PATH) return null;
+  const ext = path.extname(LOGO_PATH).slice(1).toLowerCase();
+  const data = fs.readFileSync(LOGO_PATH);
+  const size = imageSize(data, ext === 'jpeg' ? 'jpg' : ext);
+  if (!size) return null;
+  return { data, type: ext === 'jpeg' ? 'jpg' : ext, aspect: size.h / size.w };
+})();
+
+// Logo scaled to a target width in pixels (96 px = 1 inch).
+const logoRun = (widthPx) =>
+  new ImageRun({
+    data: logo.data,
+    type: logo.type,
+    transformation: { width: widthPx, height: Math.round(widthPx * logo.aspect) },
+  });
+
+// Logo constrained by height — used in the running header, where an unexpectedly
+// tall logo would otherwise grow down into the body text.
+const logoRunH = (heightPx) =>
+  new ImageRun({
+    data: logo.data,
+    type: logo.type,
+    transformation: { width: Math.round(heightPx / logo.aspect), height: heightPx },
+  });
 
 const FONT = 'Calibri';
 const BODY = 21;          // 10.5pt
-const CONTENT_W = 10400;  // 12240 page - 920 - 920 margins
+const CONTENT_W = 10540;  // 12240 page - 850 - 850 margins
 
 // ---------- run helpers ----------
 const t = (text, opts = {}) => new TextRun({ text, font: FONT, size: opts.size || BODY, ...opts });
@@ -26,10 +77,11 @@ const ul = (n) => t(us(n));
 const P = (children, opts = {}) =>
   new Paragraph({
     children,
-    spacing: { after: opts.after === undefined ? 110 : opts.after, line: 250 },
+    spacing: { after: opts.after === undefined ? 105 : opts.after, line: 246 },
     alignment: opts.alignment,
     indent: opts.indent,
     keepNext: opts.keepNext,
+    pageBreakBefore: opts.pageBreakBefore,
     border: opts.border,
   });
 
@@ -38,21 +90,21 @@ const p = (text, opts = {}) => P([t(text, opts)], opts);
 const clause = (num, runs, opts = {}) =>
   new Paragraph({
     children: [b(num + ') '), ...runs],
-    spacing: { after: opts.after === undefined ? 130 : opts.after, line: 250 },
+    spacing: { after: opts.after === undefined ? 122 : opts.after, line: 246 },
     indent: { left: 360, hanging: 360 },
   });
 
 const initialLine = () =>
   new Paragraph({
     children: [b('Initial: '), b(us(22))],
-    spacing: { after: 140, line: 250 },
+    spacing: { after: 125, line: 246 },
     indent: { left: 360 },
   });
 
 const sectionHeading = (text) =>
   new Paragraph({
     children: [b(text, { size: 24 })],
-    spacing: { before: 150, after: 130 },
+    spacing: { before: 120, after: 105 },
     keepNext: true,
   });
 
@@ -120,7 +172,15 @@ const ctr = (text, opts) =>
   });
 
 const letterhead = [
-  ctr('HIGH CALIBER ESTATE SALES LLC', { bold: true, size: 36, after: 30 }),
+  ...(logo
+    ? [
+        new Paragraph({
+          children: [logoRun(230)],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 60 },
+        }),
+      ]
+    : [ctr('HIGH CALIBER ESTATE SALES LLC', { bold: true, size: 36, after: 30 })]),
   ctr('Professional Estate Liquidation — Serving Metro Detroit', { size: 19, italics: true, after: 55 }),
   ctr('32055 Wilson Drive, Warren, MI  [ZIP]', { size: 19 }),
   ctr('Phone: [PHONE]   •   Email: [EMAIL]   •   highcaliberestatesales.com', { size: 19 }),
@@ -128,15 +188,18 @@ const letterhead = [
   rule(90),
 ];
 
-const runningHead = () => [
-  new Paragraph({
-    children: [b('HIGH CALIBER ESTATE SALES LLC', { size: 26 })],
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 30, line: 240 },
-    pageBreakBefore: true,
-  }),
-  rule(130),
-];
+// Repeating page header for pages 2+ (page 1 carries the full letterhead).
+const pageHeader = () =>
+  new Header({
+    children: [
+      new Paragraph({
+        children: logo ? [logoRunH(30)] : [b('HIGH CALIBER ESTATE SALES LLC', { size: 22 })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 20, line: 240 },
+      }),
+      rule(0),
+    ],
+  });
 
 // ---------- body ----------
 const body = [];
@@ -207,7 +270,7 @@ body.push(P([b('The number of days your sale runs determines the discount schedu
 
 const dayLine = (label, text) => new Paragraph({
   children: [checkbox(), b(label), t(text)],
-  spacing: { after: 75, line: 250 },
+  spacing: { after: 60, line: 240 },
   indent: { left: 720, hanging: 360 },
 });
 
@@ -239,8 +302,6 @@ body.push(spacer(90));
 body.push(initialLine());
 
 // ===== PAGE 2 =====
-body.push(...runningHead());
-
 body.push(clause('3', [
   t('The Seller shall '),
   b('NOT', { underline: { type: UnderlineType.SINGLE } }),
@@ -294,8 +355,6 @@ body.push(P([
 body.push(initialLine());
 
 // ===== PAGE 3 =====
-body.push(...runningHead());
-
 body.push(sectionHeading('THE SELLER SHALL:'));
 
 body.push(clause('1', [
@@ -357,8 +416,6 @@ body.push(fieldTable(
 ));
 
 // ===== PAGE 4 =====
-body.push(...runningHead());
-
 body.push(sectionHeading('ADDITIONAL TERMS'));
 
 body.push(p('Seller represents that the Estate has good title to the property, has the power to sell the property without the consent of any other party, and that the property is free and clear of all liens and encumbrances.', { after: 130 }));
@@ -406,13 +463,13 @@ body.push(P([
 
 body.push(initialLine());
 
-// ===== PAGE 5 =====
-body.push(...runningHead());
-
+// ===== SIGNATURE PAGE =====
+// The only forced break in the document: it keeps the closing letter and the
+// whole signature block together instead of splitting the block across pages.
 body.push(P([
   b('Our business is built on referrals. '),
   t('Accordingly, it is important to us that you be happy with our service. Above all, we recognize that in entrusting your sale to us, you are relying on our honesty and integrity. We have always operated, and will always operate, to the highest standards of honesty and integrity.'),
-], { after: 130 }));
+], { after: 130, pageBreakBefore: true }));
 
 body.push(p('If you ever have any questions or concerns in that regard, please let us know. We have found that in almost all cases, potential problems can be avoided if we simply communicate with each other.', { after: 130 }));
 
@@ -426,18 +483,38 @@ body.push(P([b('Liquidator:  High Caliber Estate Sales LLC', { size: 22 })], { a
 // Signature block — every rule runs the full width of the page.
 const LBL = 2800;
 const REST = CONTENT_W - LBL;
-const SIG_H = 460; // ~0.32in — room to actually write
+const SIG_H = 440; // ~0.3in — room to actually write
+
+// Paired two-per-row where the fields are short, so the block stays on one page.
+const HALF = Math.floor(CONTENT_W / 2);
 
 body.push(fieldTable(
-  [
-    [{ label: 'Seller (signature):', w: LBL }, { line: true, w: REST }],
-    [{ label: 'Seller (print name):', w: LBL }, { line: true, w: REST }],
-    [{ label: 'Date Signed:', w: LBL }, { line: true, w: REST }],
-    [{ label: 'Seller’s Phone:', w: LBL }, { line: true, w: REST }],
-    [{ label: 'Email:', w: LBL }, { line: true, w: REST }],
-    [{ label: 'Address:', w: LBL }, { line: true, w: REST }],
-  ],
-  [LBL, REST],
+  [[
+    { label: 'Seller (signature):', w: 2200 }, { line: true, w: HALF - 2200 },
+    { label: 'Date Signed:', w: 1550 }, { line: true, w: CONTENT_W - HALF - 1550 },
+  ]],
+  [2200, HALF - 2200, 1550, CONTENT_W - HALF - 1550],
+  { height: SIG_H }
+));
+
+body.push(fieldTable(
+  [[
+    { label: 'Seller (print name):', w: 2200 }, { line: true, w: HALF - 2200 },
+    { label: 'Seller’s Phone:', w: 1750 }, { line: true, w: CONTENT_W - HALF - 1750 },
+  ]],
+  [2200, HALF - 2200, 1750, CONTENT_W - HALF - 1750],
+  { height: SIG_H }
+));
+
+body.push(fieldTable(
+  [[{ label: 'Email:', w: 950 }, { line: true, w: CONTENT_W - 950 }]],
+  [950, CONTENT_W - 950],
+  { height: SIG_H }
+));
+
+body.push(fieldTable(
+  [[{ label: 'Address:', w: 1200 }, { line: true, w: CONTENT_W - 1200 }]],
+  [1200, CONTENT_W - 1200],
   { height: SIG_H }
 ));
 
@@ -445,9 +522,9 @@ body.push(fieldTable(
   [[
     { label: 'City:', w: 750 }, { line: true, w: 4300 },
     { label: 'State:', w: 900 }, { line: true, w: 1400 },
-    { label: 'Zip:', w: 640 }, { line: true, w: 2450 },
+    { label: 'Zip:', w: 640 }, { line: true, w: CONTENT_W - 7990 },
   ]],
-  [750, 4300, 900, 1400, 640, 2450],
+  [750, 4300, 900, 1400, 640, CONTENT_W - 7990],
   { height: SIG_H }
 ));
 
@@ -464,7 +541,6 @@ body.push(fieldTable(
     [{ line: true, w: CONTENT_W }],
     [{ line: true, w: CONTENT_W }],
     [{ line: true, w: CONTENT_W }],
-    [{ line: true, w: CONTENT_W }],
   ],
   [CONTENT_W],
   { height: SIG_H }
@@ -475,10 +551,15 @@ const doc = new Document({
   styles: { default: { document: { run: { font: FONT, size: BODY } } } },
   sections: [{
     properties: {
+      titlePage: true,
       page: {
         size: { width: 12240, height: 15840, orientation: PageOrientation.PORTRAIT },
-        margin: { top: 700, right: 920, bottom: 640, left: 920 },
+        margin: { top: 880, right: 850, bottom: 620, left: 850, header: 360, footer: 270 },
       },
+    },
+    headers: {
+      first: new Header({ children: [] }),
+      default: pageHeader(),
     },
     footers: {
       default: new Footer({
