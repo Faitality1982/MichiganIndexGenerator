@@ -57,13 +57,9 @@ The body font is Calibri. When previewing on Linux, install
 `fonts-crosextra-carlito` first; without a metric-compatible font the
 substitute is wider and labels wrap that would not wrap in Word.
 
-## Placeholders to fill before use
+## Letterhead
 
-One field remains in the letterhead on page 1:
-
-| Placeholder | Notes |
-|---|---|
-| `[EMAIL]` | Business email — the only field still outstanding |
+Complete: address, phone, email, site, and both members. No placeholders remain.
 
 Blank underscore fields in the body are intentional — they are filled in by hand
 per sale (dates, address, commission percentages, cancellation fee, parking,
