@@ -61,7 +61,6 @@ These appear in the letterhead on page 1 and must be replaced:
 | `[ZIP]` | ZIP for 32055 Wilson Drive, Warren, MI |
 | `[PHONE]` | Business phone |
 | `[EMAIL]` | Business email |
-| `[OWNER NAME]` | Owner / managing member |
 
 Blank underscore fields in the body are intentional — they are filled in by hand
 per sale (dates, address, commission percentages, cancellation fee, parking,
@@ -76,6 +75,11 @@ key/security codes, discount schedule).
 | Deduction % for items removed after work begins | p.2 and p.3, Seller ¶7 |
 | Cancellation fee | p.4, Additional Terms |
 
+## Execution
+
+Both members sign for the Liquidator — William Faitel and Casey Faitel — each
+with their own signature and date line, above the Seller's block.
+
 ## Structure
 
 1. **Page 1** — Letterhead, sale dates, estate address, Liquidator duties 1–2,
@@ -84,10 +88,11 @@ key/security codes, discount schedule).
    payment methods, net proceeds and commission, removed-item deduction.
 3. **Page 3** — Seller duties 1–9: access, keys, NFS items, waiver, insurance,
    indemnification, no removal, photo release, HOA approval. Seller signature.
-4. **Page 4** — Additional terms: title, release on acceptance of proceeds,
+3. **Pages 3–4** — Additional terms: title, release on acceptance of proceeds,
    venue, cancellation, best-efforts disclaimer, weather, parking, client
    attendance, sale of real property.
-5. **Page 5** — Referral/closing letter and full signature block.
+4. **Page 4** — Referral/closing letter and the signature block: both
+   Liquidator members, then the Seller.
 
 ## Venue clause
 

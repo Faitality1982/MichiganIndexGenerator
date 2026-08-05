@@ -77,7 +77,11 @@ const ul = (n) => t(us(n));
 const P = (children, opts = {}) =>
   new Paragraph({
     children,
-    spacing: { after: opts.after === undefined ? 105 : opts.after, line: 246 },
+    spacing: {
+      after: opts.after === undefined ? 105 : opts.after,
+      before: opts.before,
+      line: 246,
+    },
     alignment: opts.alignment,
     indent: opts.indent,
     keepNext: opts.keepNext,
@@ -186,7 +190,7 @@ const letterhead = [
   ctr('Professional Estate Liquidation — Serving Metro Detroit', { size: 19, italics: true, after: 55 }),
   ctr('32055 Wilson Drive, Warren, MI  [ZIP]', { size: 19 }),
   ctr('Phone: [PHONE]   •   Email: [EMAIL]   •   highcaliberestatesales.com', { size: 19 }),
-  ctr('Owner: [OWNER NAME]', { size: 19, after: 80 }),
+  ctr('William Faitel  •  Casey Faitel, Members', { size: 19, after: 80 }),
   rule(90),
 ];
 
@@ -480,7 +484,6 @@ body.push(p('In addition, we recognize that every sale is different. We will mak
 body.push(p('If this Agreement correctly reflects your understanding of our arrangement, please sign in the space provided below and return one copy to us. We appreciate this opportunity to serve you, and we look forward to a productive sale!', { after: 180 }));
 
 body.push(rule(150));
-body.push(P([b('Liquidator:  High Caliber Estate Sales LLC', { size: 22 })], { after: 200 }));
 
 // Signature block — every rule runs the full width of the page.
 const LBL = 2800;
@@ -489,6 +492,29 @@ const SIG_H = 440; // ~0.3in — room to actually write
 
 // Paired two-per-row where the fields are short, so the block stays on one page.
 const HALF = Math.floor(CONTENT_W / 2);
+
+// Both members sign for the Liquidator.
+body.push(P([b('LIQUIDATOR:  High Caliber Estate Sales LLC', { size: 22 })], { after: 140 }));
+
+body.push(fieldTable(
+  [[
+    { label: 'By: William Faitel, Member', w: 2900 }, { line: true, w: HALF - 2900 },
+    { label: 'Date:', w: 800 }, { line: true, w: CONTENT_W - HALF - 800 },
+  ]],
+  [2900, HALF - 2900, 800, CONTENT_W - HALF - 800],
+  { height: SIG_H }
+));
+
+body.push(fieldTable(
+  [[
+    { label: 'By: Casey Faitel, Member', w: 2900 }, { line: true, w: HALF - 2900 },
+    { label: 'Date:', w: 800 }, { line: true, w: CONTENT_W - HALF - 800 },
+  ]],
+  [2900, HALF - 2900, 800, CONTENT_W - HALF - 800],
+  { height: SIG_H }
+));
+
+body.push(P([b('SELLER:', { size: 22 })], { before: 260, after: 140 }));
 
 body.push(fieldTable(
   [[
