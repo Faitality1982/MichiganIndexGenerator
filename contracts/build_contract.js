@@ -208,6 +208,25 @@ const pageHeader = () =>
     ],
   });
 
+// Footer: appears on every page, page 1 included.
+const pageFooter = () =>
+  new Footer({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 100 },
+        children: [
+          t('High Caliber Estate Sales LLC — Agreement to Conduct Estate Sale     Seller Initials: ', { size: 15 }),
+          t(us(9), { size: 15 }),
+          t('     Page ', { size: 15 }),
+          new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 15 }),
+          t(' of ', { size: 15 }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: 15 }),
+        ],
+      }),
+    ],
+  });
+
 // ---------- body ----------
 const body = [];
 
@@ -591,23 +610,12 @@ const doc = new Document({
       first: new Header({ children: [] }),
       default: pageHeader(),
     },
+    // titlePage gives page 1 its own header AND footer. The first-page header is
+    // deliberately empty (the letterhead is in the body), but page 1 still needs
+    // the footer — without an explicit `first` footer it would have none.
     footers: {
-      default: new Footer({
-        children: [
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { before: 100 },
-            children: [
-              t('High Caliber Estate Sales LLC — Agreement to Conduct Estate Sale     Seller Initials: ', { size: 15 }),
-              t(us(9), { size: 15 }),
-              t('     Page ', { size: 15 }),
-              new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 15 }),
-              t(' of ', { size: 15 }),
-              new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: 15 }),
-            ],
-          }),
-        ],
-      }),
+      first: pageFooter(),
+      default: pageFooter(),
     },
     children: body,
   }],

@@ -53,6 +53,10 @@ The company name repeats on pages 2+ via a real page `Header` with
 full letterhead). Earlier drafts faked this with inline heading paragraphs, which
 forced a page break at every section and wasted roughly a page.
 
+`titlePage: true` splits the **footer** as well as the header, so a `first`
+footer must be supplied explicitly or page 1 silently renders without one.
+Both `first` and `default` use the same `pageFooter()`.
+
 The body font is Calibri. When previewing on Linux, install
 `fonts-crosextra-carlito` first; without a metric-compatible font the
 substitute is wider and labels wrap that would not wrap in Word.
