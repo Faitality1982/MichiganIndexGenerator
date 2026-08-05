@@ -7,10 +7,15 @@ to conduct an estate sale. `build_contract.js` regenerates it.
 ## Logo
 
 Drop the company logo in this directory as `logo.png` or `logo.jpg` and rebuild.
-It is placed on the cover (scaled to 2.4 in wide) and in the running header on
-pages 2+ (scaled to 0.31 in tall, so a tall logo cannot grow into the body).
-Aspect ratio is read from the file, so the image is never distorted. With no
-logo file present the wordmark falls back to type.
+It is placed on the cover and in the running header on pages 2+, sized by its
+larger dimension: a square badge lands at ~1.6 in on the cover and 0.44 in in
+the header, a wide banner at ~2.4 in and 0.31 in. Aspect ratio is read from the
+file, so the image is never distorted. With no logo file present the wordmark
+falls back to type.
+
+The header paragraph must not set a fixed `line` height when a logo is present —
+a fixed line height clips an inline image to that height, which squashes a
+square logo into a wide bar.
 
 ## Regenerating
 
@@ -54,13 +59,11 @@ substitute is wider and labels wrap that would not wrap in Word.
 
 ## Placeholders to fill before use
 
-These appear in the letterhead on page 1 and must be replaced:
+One field remains in the letterhead on page 1:
 
 | Placeholder | Notes |
 |---|---|
-| `[ZIP]` | ZIP for 32055 Wilson Drive, Warren, MI |
-| `[PHONE]` | Business phone |
-| `[EMAIL]` | Business email |
+| `[EMAIL]` | Business email — the only field still outstanding |
 
 Blank underscore fields in the body are intentional — they are filled in by hand
 per sale (dates, address, commission percentages, cancellation fee, parking,
@@ -70,10 +73,10 @@ key/security codes, discount schedule).
 
 | Term | Where |
 |---|---|
-| Commission % on gross proceeds | p.2, Liquidator ¶7 |
-| Commission % on titled property (vehicles, tractors, boats, trailers) | p.2, Liquidator ¶7 |
-| Deduction % for items removed after work begins | p.2 and p.3, Seller ¶7 |
-| Cancellation fee | p.4, Additional Terms |
+| Commission % on gross proceeds | Liquidator ¶7 |
+| Commission % on titled property (vehicles, tractors, boats, trailers) | Liquidator ¶7 |
+| Deduction % for items removed after work begins | Liquidator ¶7 and Seller ¶7 |
+| Cancellation fee | Additional Terms |
 
 ## Execution
 
@@ -84,14 +87,16 @@ with their own signature and date line, above the Seller's block.
 
 1. **Page 1** — Letterhead, sale dates, estate address, Liquidator duties 1–2,
    discount schedule by sale length.
-2. **Page 2** — Liquidator duties 3–7: pricing authority, advertising, security,
-   payment methods, net proceeds and commission, removed-item deduction.
-3. **Page 3** — Seller duties 1–9: access, keys, NFS items, waiver, insurance,
-   indemnification, no removal, photo release, HOA approval. Seller signature.
-3. **Pages 3–4** — Additional terms: title, release on acceptance of proceeds,
+2. **Pages 1–2** — Liquidator duties 3–7: pricing authority, advertising,
+   security, payment methods, net proceeds and commission, removed-item
+   deduction.
+3. **Pages 2–3** — Seller duties 1–9: access, keys, NFS items, waiver,
+   insurance, indemnification, no removal, photo release, HOA approval, and the
+   Seller's acknowledgement signature.
+4. **Pages 3–4** — Additional terms: title, release on acceptance of proceeds,
    venue, cancellation, best-efforts disclaimer, weather, parking, client
    attendance, sale of real property.
-4. **Page 4** — Referral/closing letter and the signature block: both
+5. **Page 4** — Referral/closing letter and the signature block: both
    Liquidator members, then the Seller.
 
 ## Venue clause

@@ -188,8 +188,8 @@ const letterhead = [
       ]
     : [ctr('HIGH CALIBER ESTATE SALES LLC', { bold: true, size: 36, after: 30 })]),
   ctr('Professional Estate Liquidation — Serving Metro Detroit', { size: 19, italics: true, after: 55 }),
-  ctr('32055 Wilson Drive, Warren, MI  [ZIP]', { size: 19 }),
-  ctr('Phone: [PHONE]   •   Email: [EMAIL]   •   highcaliberestatesales.com', { size: 19 }),
+  ctr('32055 Wellston Dr, Warren, MI 48093', { size: 19 }),
+  ctr('Phone: (586) 246-8620   •   Email: [EMAIL]   •   highcaliberestatesales.com', { size: 19 }),
   ctr('William Faitel  •  Casey Faitel, Members', { size: 19, after: 80 }),
   rule(90),
 ];
