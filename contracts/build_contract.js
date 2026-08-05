@@ -175,7 +175,9 @@ const letterhead = [
   ...(logo
     ? [
         new Paragraph({
-          children: [logoRun(230)],
+          // Sized by the larger dimension: a square mark lands ~1.6in, a wide
+          // banner ~2.4in, so neither shape dominates the cover.
+          children: [logo.aspect > 0.5 ? logoRunH(155) : logoRun(230)],
           alignment: AlignmentType.CENTER,
           spacing: { after: 60 },
         }),
@@ -193,9 +195,9 @@ const pageHeader = () =>
   new Header({
     children: [
       new Paragraph({
-        children: logo ? [logoRunH(30)] : [b('HIGH CALIBER ESTATE SALES LLC', { size: 22 })],
+        children: logo ? [logoRunH(logo.aspect > 0.5 ? 42 : 30)] : [b('HIGH CALIBER ESTATE SALES LLC', { size: 22 })],
         alignment: AlignmentType.CENTER,
-        spacing: { after: 20, line: 240 },
+        spacing: logo ? { after: 20 } : { after: 20, line: 240 },
       }),
       rule(0),
     ],
@@ -554,7 +556,8 @@ const doc = new Document({
       titlePage: true,
       page: {
         size: { width: 12240, height: 15840, orientation: PageOrientation.PORTRAIT },
-        margin: { top: 880, right: 850, bottom: 620, left: 850, header: 360, footer: 270 },
+        // A logo header is taller than a line of type, so the body starts lower.
+        margin: { top: logo ? 1150 : 950, right: 850, bottom: 620, left: 850, header: 340, footer: 270 },
       },
     },
     headers: {
