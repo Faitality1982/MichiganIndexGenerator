@@ -9,3 +9,7 @@ Thumbs.db
 -e 
 # Built binaries
 dist/
+
+# eBay lister: item photo folders and tool state
+listings/
+ebay_state.json

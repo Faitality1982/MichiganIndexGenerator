@@ -69,6 +69,10 @@ The app uses a custom citation parser (`CitationParser`) that:
 - Reads the existing Index pages (if present) for full citation display text
 - Scans the body for all page numbers where each citation appears
 
+## Also in This Repo: eBay Lister
+
+`ebay_lister/` is a separate tool that turns photos of an item into a live eBay listing, driven by Claude Code. See [`ebay_lister/README.md`](ebay_lister/README.md).
+
 ## Support This Tool
 
 If this saves you time, please consider a small donation:
