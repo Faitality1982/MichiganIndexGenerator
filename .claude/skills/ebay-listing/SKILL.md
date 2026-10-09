@@ -1,17 +1,17 @@
 ---
 name: ebay-listing
-description: Turn photos of an item into a live eBay listing on the user's account. Use when the user points you to photos or a photo folder and wants them listed or drafted for eBay, asks you to "list this on eBay", or wants a batch of estate-sale items put up. Covers drafting the title, description, item specifics and condition from the photos, picking the category, checking prices against active listings, and publishing through ebay_lister.
+description: Turn photos of an item into a live eBay listing or a ready-to-post Facebook Marketplace draft. Use when the user points you to photos or a photo folder and wants them listed, asks you to "list this" on eBay or Facebook, or wants a batch of estate-sale items put up. Covers deciding eBay vs Facebook, drafting the title, description, item specifics and condition from the photos, picking the category, checking prices, and publishing through ebay_lister.
 ---
 
-# eBay listing from photos
+# eBay or Facebook listing from photos
 
-You write the listing; `ebay_lister/ebay_lister.py` (in this repo) does everything that talks to eBay. Run it with `python` (or `py` on Windows if `python` isn't found). Setup and command details are in `ebay_lister/README.md`.
+You write the listing; `ebay_lister/ebay_lister.py` (in this repo) does everything that talks to eBay and decides eBay versus Facebook Marketplace from the numbers you give it. Facebook has no listing API for individual sellers, so a Facebook item ends as a draft folder the user posts in the Meta Seller app (phone or web). Do all the judgment here in Claude Code; never add calls to a paid AI API to the tool, because the user runs this on their Claude subscription. Run it with `python` (or `py` on Windows if `python` isn't found). Setup and command details are in `ebay_lister/README.md`.
 
 Publishing creates a public listing on the user's real eBay account and can incur fees. Never run `publish --yes` until the user has approved that specific item's final summary in this conversation.
 
 ## Before the first item
 
-Run `python ebay_lister/ebay_lister.py policies`. It's read-only and needs both the config and the eBay sign-in. If it errors with "No config found", "Missing client_id" or "Not signed in", stop and walk the user through the one-time setup in `ebay_lister/README.md`. They have to do the eBay sign-in step themselves, because it happens in their browser. If no policy is marked `*` as configured, have them choose one of each.
+Skip this for items that route to Facebook; `route` and `facebook` work without the eBay setup. For eBay items, run `python ebay_lister/ebay_lister.py policies`. It's read-only and needs both the config and the eBay sign-in. If it errors with "No config found", "Missing client_id" or "Not signed in", stop and walk the user through the one-time setup in `ebay_lister/README.md`. They have to do the eBay sign-in step themselves, because it happens in their browser. If no policy is marked `*` as configured, have them choose one of each.
 
 ## Per item
 
@@ -20,14 +20,17 @@ The user gives you a folder with one item's photos in it. If they give you loose
 1. **Prep the photos.** Run `python ebay_lister/ebay_lister.py prep "<folder>"`. It writes upright, resized JPEGs to `<folder>/prepared/` with GPS and other metadata removed, and creates a `listing.json` template.
 2. **Look at every photo** in `prepared/` with the Read tool. Zoom in mentally on labels, maker's marks, model and serial plates, signatures, tags, and damage. If something that matters is unreadable (a hallmark, a model number), ask for a close-up. Don't guess.
 3. **Draft `listing.json`** using the rules below. Put anything you couldn't confirm into `seller_notes`.
-4. **Pick a category.** Run `category "<folder>" --query "<3-6 words: what it is>"`, choose the best match, then `category "<folder>" --pick N`. The output lists the allowed conditions and the required and recommended item specifics. Fill every REQUIRED specific. For "pick from list" specifics, use one of eBay's values exactly as printed. Fill recommended ones only when the photos or the user support them. Rerun `category "<folder>"` until nothing required shows as MISSING.
-5. **Check prices.** Run `comps "<folder>"`. It shows active asking prices, not sold prices. Tell the user the low, median and high. If they want a suggestion, give one and explain it, and say it is based on asking prices. Mention that Seller Hub > Research (Terapeak) shows sold prices. The user decides the price. Don't write a price into `listing.json` until they give it or agree to yours.
-6. **Resolve `seller_notes`** by asking the user. Update the draft with their answers, then empty the list.
-7. **Verify.** Run `verify "<folder>"`. This uploads the photos and has eBay check the listing without listing it. It also shows the insertion fee. Fix any errors and rerun until it passes.
-8. **Get approval.** Show the user the title, price and format, category, condition and condition note, item specifics, a short version of the description, the photo count, and the fees. Ask whether to list it.
-9. **Publish** only after the user says yes: `publish "<folder>" --yes`. Give them the listing URL it prints.
+4. **Route it.** Fill the `routing` block (see below), then run `route "<folder>"`. It prints eBay, Facebook, or ASK THE USER with the numbers behind it. Tell the user the result in a sentence. On ASK, give both nets and your recommendation, let the user choose, and set `routing.decision` to `"ebay"` or `"facebook"`. The user can always overrule the rule: set `routing.decision` to what they want.
+   - **Facebook:** fill the `facebook` block, run `facebook "<folder>"`, and show the user the draft it prints. It writes `<folder>/facebook/listing.txt` and numbered photos (cover first, at most 10). Then tell them to post it in the Seller app. You're done with this item; skip the steps below.
+   - **eBay:** carry on with step 5.
+5. **Pick a category.** Run `category "<folder>" --query "<3-6 words: what it is>"`, choose the best match, then `category "<folder>" --pick N`. The output lists the allowed conditions and the required and recommended item specifics. Fill every REQUIRED specific. For "pick from list" specifics, use one of eBay's values exactly as printed. Fill recommended ones only when the photos or the user support them. Rerun `category "<folder>"` until nothing required shows as MISSING.
+6. **Check prices.** Run `comps "<folder>"`. It shows active asking prices, not sold prices. Tell the user the low, median and high. If they want a suggestion, give one and explain it, and say it is based on asking prices. Mention that Seller Hub > Research (Terapeak) shows sold prices. The user decides the price. Don't write a price into `listing.json` until they give it or agree to yours.
+7. **Resolve `seller_notes`** by asking the user. Update the draft with their answers, then empty the list.
+8. **Verify.** Run `verify "<folder>"`. This uploads the photos and has eBay check the listing without listing it. It also shows the insertion fee. Fix any errors and rerun until it passes.
+9. **Get approval.** Show the user the title, price and format, category, condition and condition note, item specifics, a short version of the description, the photo count, and the fees. Ask whether to list it.
+10. **Publish** only after the user says yes: `publish "<folder>" --yes`. Give them the listing URL it prints.
 
-For a batch (a parent folder containing one subfolder per item), do steps 1-7 for each item, then run `status "<parent>"` and show the table. Publish only the items the user approves. "List them all" counts as approval for every item in the table they just saw.
+For a batch (a parent folder containing one subfolder per item), do steps 1-8 for each item (steps 1-4 for Facebook items), then run `status "<parent>"` and show the table. Publish only the items the user approves. "List them all" counts as approval for every item in the table they just saw.
 
 ## listing.json
 
@@ -55,6 +58,45 @@ For a batch (a parent folder containing one subfolder per item), do steps 1-7 fo
 - Auctions: `"listing_type": "Chinese"`, `"duration": "Days_7"` (also Days_1/3/5/10), and `price` is the starting bid. Default to fixed price unless the user asks for an auction.
 - `category_id` and `category_name` are filled by the `category` command.
 - `seller_notes` is never sent to eBay.
+
+## Routing (eBay or Facebook)
+
+```json
+"routing": {
+  "weight_lb": 4,
+  "dims_in": [14, 10, 8],
+  "local_only": "",
+  "ebay_price_est": 120,
+  "ship_cost_est": 15,
+  "free_shipping": false,
+  "local_price_est": 40,
+  "decision": ""
+}
+```
+
+- `weight_lb` and `dims_in` are the packed size. Use the user's measurements when they gave them; otherwise estimate, and say so when you report the route.
+- `local_only`: a short reason when it can't ship sensibly at all (refrigerator, washer, sofa, piano, glass tabletop). Leave it empty otherwise.
+- `ebay_price_est`: base it on `comps` when eBay setup is done (asking prices, so lean low), otherwise on what you know, and say which.
+- `ship_cost_est`: a rough label cost for that weight and size. `free_shipping` is true only if the user's shipping policy is free shipping.
+- `local_price_est`: what it would realistically sell for on Facebook locally. Facebook has no price data, so this is your estimate; say so.
+
+The rules, in order: local-only, over 70 lb, or over 130 in length + girth goes to Facebook. eBay netting under $25 goes to Facebook. eBay wins when its net (after about 13.6% plus $0.40 in fees, and shipping if free) beats the local price by $15 or 25%, whichever is more. eBay ahead by less than that is ASK; otherwise Facebook. The thresholds and fee rate can be changed in config.json under `"routing"`.
+
+## Facebook draft
+
+```json
+"facebook": {
+  "title": "",
+  "price": null,
+  "condition": "Used - Good",
+  "category": "Appliances",
+  "description": ""
+}
+```
+
+- `condition` is required: New, Used - Like New, Used - Good, or Used - Fair.
+- Blank `title`, `price` and `description` fall back to the eBay title, `routing.local_price_est`, and the eBay description as plain text. Write a separate `description` when the eBay one talks about shipping or reads too formally for a local sale. Mention pickup for local-only items.
+- The drafting rules below apply to Facebook text too.
 
 ## Drafting rules
 

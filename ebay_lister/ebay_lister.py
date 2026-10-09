@@ -11,6 +11,8 @@ One-time setup:
 
 Per item:
     python ebay_lister.py prep     FOLDER   resize/rotate photos, strip GPS, make listing.json
+    python ebay_lister.py route    FOLDER   eBay or Facebook Marketplace?
+    python ebay_lister.py facebook FOLDER   write the Facebook draft to paste into Seller
     python ebay_lister.py category FOLDER   choose category; see required item specifics
     python ebay_lister.py comps    FOLDER   active listings for price reference
     python ebay_lister.py verify   FOLDER   dry run with eBay: errors + fees, lists nothing
@@ -29,6 +31,7 @@ import requests
 
 import ebay_api
 import listing as lst
+import route
 from ebay_api import EbayClient, EbayError
 
 
@@ -123,8 +126,68 @@ def cmd_prep(args):
     if (folder / lst.LISTING_FILE).exists():
         out(f"\n{lst.LISTING_FILE} already exists - left unchanged.")
     else:
-        lst.save_listing(folder, dict(lst.LISTING_TEMPLATE))
+        lst.save_listing(folder, {**lst.LISTING_TEMPLATE,
+                                  "routing": dict(route.ROUTING_TEMPLATE),
+                                  "facebook": dict(route.FACEBOOK_TEMPLATE)})
         out(f"\nCreated {lst.LISTING_FILE} template.")
+    return 0
+
+
+def _optional_config():
+    """Routing and Facebook drafts work before the eBay setup is done."""
+    try:
+        return ebay_api.load_config()
+    except EbayError:
+        return {}
+
+
+def cmd_route(args):
+    folder = _folder(args.folder)
+    listing = lst.load_listing(folder)
+    cfg = _optional_config()
+    routing = {**route.ROUTING_TEMPLATE, **(listing.get("routing") or {})}
+    channel, reasons, numbers = route.decide(routing, cfg)
+
+    label = {route.EBAY: "eBay", route.FACEBOOK: "Facebook Marketplace (local pickup)",
+             route.ASK: "ASK THE USER"}[channel]
+    out(f"Route: {label}")
+    for reason in reasons:
+        out(f"  - {reason}")
+    if "ebay_net" in numbers:
+        out(f"  eBay net ${numbers['ebay_net']:.2f} after ~{route.settings(cfg)['ebay_fee_rate']:.1%} "
+            f"fees  |  Facebook local ${numbers['local_net']:.2f}")
+    out("  (estimates - eBay figures use asking prices, Facebook is a local guess)")
+
+    if channel != route.ASK:
+        routing["decision"] = channel
+    elif routing.get("decision"):
+        out(f'\nKeeping the decision already in listing.json: {routing["decision"]}')
+    listing["routing"] = routing
+    lst.save_listing(folder, listing)
+    if channel == route.ASK and not routing.get("decision"):
+        out('\nDecide with the user, then set routing.decision to "ebay" or "facebook".')
+    return 0
+
+
+def cmd_facebook(args):
+    folder = _folder(args.folder)
+    listing = lst.load_listing(folder)
+    cfg = _optional_config()
+    fields = route.facebook_fields(listing)
+    problems = route.facebook_problems(fields)
+    if problems:
+        out("Fix these in listing.json first:")
+        for p in problems:
+            out(f"  - {p}")
+        return 2
+    photos = [p for p in lst.photo_paths(folder, listing) if p.exists()]
+    if not photos:
+        raise EbayError("No prepared photos - run `prep` first.")
+    fb_dir = route.write_facebook_draft(folder, fields, photos, cfg)
+    out((fb_dir / route.FB_TEXT).read_text(encoding="utf-8"))
+    out(f"Draft and photos are in {fb_dir}")
+    out("Post it in the Meta Seller app (phone or web): new listing, add the photos "
+        "in order, paste the fields.")
     return 0
 
 
@@ -320,6 +383,9 @@ def cmd_publish(args):
     if state.get("item_id"):
         out(f"Already listed: {state['url']}\nEdit it in Seller Hub; this tool won't list it twice.")
         return 0
+    if (listing.get("routing") or {}).get("decision") == route.FACEBOOK:
+        raise EbayError('This item is routed to Facebook (routing.decision). Change it to '
+                        '"ebay" in listing.json to list it on eBay instead.')
 
     result = _verify(folder, listing, cfg, client, state)
     if not result:
@@ -369,7 +435,14 @@ def cmd_status(args):
         listing, state = lst.load_listing(item), lst.load_state(item)
         price = listing.get("price")
         price = f"${float(price):.2f}" if isinstance(price, (int, float)) else "no price"
-        where = state["url"] if state.get("item_id") else "draft"
+        decision = (listing.get("routing") or {}).get("decision")
+        if state.get("item_id"):
+            where = state["url"]
+        elif decision == route.FACEBOOK:
+            where = "facebook draft ready" if (item / route.FB_DIR / route.FB_TEXT).exists() \
+                else "facebook (no draft yet)"
+        else:
+            where = f"{decision} draft" if decision else "draft"
         out(f"  {item.name:<28} {price:>10}  {(listing.get('title') or '(no title)')[:50]:<50}  {where}")
     return 0
 
@@ -380,7 +453,7 @@ def cmd_status(args):
 
 def build_parser():
     p = argparse.ArgumentParser(prog="ebay_lister.py",
-                                description="Turn a folder of item photos into an eBay listing.")
+                                description="Turn a folder of item photos into an eBay or Facebook listing.")
     sub = p.add_subparsers(dest="command", required=True)
 
     sub.add_parser("setup", help="create the config file").set_defaults(func=cmd_setup)
@@ -398,6 +471,14 @@ def build_parser():
     a = sub.add_parser("prep", help="prepare photos and create listing.json")
     a.add_argument("folder")
     a.set_defaults(func=cmd_prep)
+
+    a = sub.add_parser("route", help="decide eBay or Facebook Marketplace")
+    a.add_argument("folder")
+    a.set_defaults(func=cmd_route)
+
+    a = sub.add_parser("facebook", help="write the Facebook Marketplace draft")
+    a.add_argument("folder")
+    a.set_defaults(func=cmd_facebook)
 
     a = sub.add_parser("category", help="choose category, show required specifics")
     a.add_argument("folder")

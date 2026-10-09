@@ -8,6 +8,7 @@ An item folder looks like:
         prepared/                          web-ready JPEGs made by `prep`
         listing.json                       the listing (written by Claude / you)
         ebay_state.json                    managed by the tool: photo URLs, ItemID
+        facebook/                          Facebook draft made by `facebook`
 """
 
 import hashlib
@@ -61,6 +62,8 @@ LISTING_TEMPLATE = {
     "sku": "",
     "photos": [],
     "seller_notes": [],
+    "routing": {},       # eBay or Facebook inputs; see route.py
+    "facebook": {},      # Facebook-only overrides; see route.py
 }
 
 

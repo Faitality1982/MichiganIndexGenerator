@@ -1,6 +1,6 @@
 # eBay Lister
 
-Turns a folder of item photos into a live eBay listing on your account.
+Turns a folder of item photos into a live eBay listing on your account, or into a Facebook Marketplace draft when the item sells better locally.
 
 In Claude Code you say *"List the item in `listings\brass-lamp`"*. Claude looks at the photos and writes the title, description, item specifics and condition. It picks the category, checks prices against active listings, asks you about anything it can't confirm from the photos, and has eBay dry-run the listing so you can see the fees. It lists the item only after you approve it. The workflow is in the `ebay-listing` skill (`.claude/skills/ebay-listing/SKILL.md`). This folder holds the tool that does the eBay side.
 
@@ -82,7 +82,33 @@ brass-lamp\
     prepared\             web-ready JPEGs: long side at most 1600px, no EXIF/GPS
     listing.json          the listing
     ebay_state.json       managed by the tool: uploaded photo URLs, ItemID
+    facebook\             Facebook draft: listing.txt + 01.jpg, 02.jpg ...
 ```
+
+## eBay or Facebook Marketplace
+
+After drafting `listing.json`, Claude fills its `routing` block (packed weight and size, eBay and local price estimates, shipping cost) and runs:
+
+```
+python ebay_lister.py route     ..\listings\fridge       # eBay, Facebook, or ask you
+python ebay_lister.py facebook  ..\listings\fridge       # Facebook draft: facebook\listing.txt + photos
+```
+
+- Local only, over 70 lb, or over 130 in length + girth: Facebook.
+- eBay would net under $25: Facebook.
+- eBay net (after about 13.6% + $0.40 in fees, and shipping if you offer it free) beats the local price by $15 or 25%, whichever is more: eBay. Closer than that, Claude asks you.
+
+Facebook doesn't offer a listing API to individual sellers, so the Facebook step stops at a draft: open the Meta Seller app (phone or web), start a listing, add the photos from `facebook\` in order, and paste the fields from `listing.txt`. `route` and `facebook` don't need the eBay setup.
+
+The fee rate is approximate. Check it against eBay's fee page and change it, or any threshold, in `config.json`:
+
+```json
+"routing": {"ebay_fee_rate": 0.136, "ebay_fee_per_order": 0.40, "max_ship_weight_lb": 70,
+            "max_ship_length_girth_in": 130, "min_ebay_net": 25, "ebay_margin_abs": 15,
+            "ebay_margin_pct": 0.25, "fb_max_photos": 10}
+```
+
+eBay listings that offer shipping can also show up on Facebook Marketplace automatically, with checkout on eBay, so eBay items get Facebook buyers too.
 
 ## Good to know
 
