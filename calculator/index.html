@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}</style>
+</head>
+<body>
+<title>Tote Rack Quote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: workbench split. Order form on the left, live quote sheet (or shop sheet) on the right; stacks on phones. */
+:root{
+  --bg:#ECEEED; --surface:#FFFFFF; --sunk:#F5F6F5; --ink:#15191B; --muted:#5B6469; --line:#D3D8DA;
+  --accent:#F2C200; --accent-ink:#7A5D00; --on-accent:#15191B;
+  --wood:#D4A86E; --wood2:#B98A50; --tote:#2A2F33; --tote-line:#15191B;
+  --good:#1F7A4D; --warn:#A35A00; --warn-bg:#FFF4DC;
+  --paper:#FFFFFF; --paper-ink:#1A1D1F; --paper-muted:#6A7277; --paper-line:#DCE0E2;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111416; --surface:#1A1E21; --sunk:#14181A; --ink:#E9EDEE; --muted:#97A1A7; --line:#2C3337;
+  --accent:#F5C518; --accent-ink:#F5C518; --on-accent:#15191B;
+  --wood:#C49558; --wood2:#A47840; --tote:#3B4247; --tote-line:#0B0D0E;
+  --good:#5BC28C; --warn:#F0A847; --warn-bg:#2B2416;
+  --paper:#F7F7F5; --paper-ink:#1A1D1F; --paper-muted:#636B70; --paper-line:#D6DADC;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#111416; --surface:#1A1E21; --sunk:#14181A; --ink:#E9EDEE; --muted:#97A1A7; --line:#2C3337;
+  --accent:#F5C518; --accent-ink:#F5C518; --on-accent:#15191B;
+  --wood:#C49558; --wood2:#A47840; --tote:#3B4247; --tote-line:#0B0D0E;
+  --good:#5BC28C; --warn:#F0A847; --warn-bg:#2B2416;
+  --paper:#F7F7F5; --paper-ink:#1A1D1F; --paper-muted:#636B70; --paper-line:#D6DADC;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1240px;margin:0 auto}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:20px 16px;border-bottom:2px solid var(--ink);margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:40px;height:40px;flex:none}
+h1{font-family:var(--f-display);font-weight:700;font-size:2rem;line-height:1;letter-spacing:.01em;margin:0;text-transform:uppercase}
+.sub{color:var(--muted);font-size:.85rem;margin-top:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.btn{border:1.5px solid var(--ink);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:4px;font-weight:600;font-size:.9rem}
+.btn:hover{background:var(--sunk)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(.95)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,390px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:920px){.grid{grid-template-columns:minmax(0,1fr)}}
+form{display:flex;flex-direction:column;gap:16px;min-width:0}
+fieldset{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:14px 16px 16px;margin:0;display:grid;gap:12px;min-width:0}
+legend{font-family:var(--f-display);font-weight:700;font-size:1.05rem;text-transform:uppercase;letter-spacing:.06em;padding:0 6px;margin-left:-6px}
+label.f{display:grid;gap:4px;font-size:.8rem;color:var(--muted);font-weight:500}
+input[type=text],input[type=number],input[type=email],input[type=tel],input[type=date],textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:8px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:64px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.steppers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stepper{display:grid;gap:4px}
+.stepper .lab{font-size:.8rem;color:var(--muted);font-weight:500}
+.stepper .ctl{display:grid;grid-template-columns:40px 1fr 40px;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;background:var(--sunk)}
+.stepper button{border:0;background:var(--surface);color:var(--ink);font-size:1.2rem;font-weight:600}
+.stepper button:hover{background:var(--accent);color:var(--on-accent)}
+.stepper output{display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.6}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{border:1.5px solid var(--line);background:var(--sunk);border-radius:4px;padding:7px 12px;font-size:.88rem;font-weight:500;cursor:pointer;color:var(--ink)}
+.seg input:checked+label{border-color:var(--ink);background:var(--accent);color:var(--on-accent);font-weight:600}
+.seg input:focus-visible+label{outline:3px solid var(--accent);outline-offset:2px}
+.hint{font-size:.8rem;color:var(--muted);margin:0}
+.slots{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.slots b{color:var(--ink);font-weight:500}
+details.settings{border:1px solid var(--line);background:var(--surface);border-radius:6px}
+details.settings>summary{cursor:pointer;padding:12px 16px;font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:1.05rem;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.settings>summary::after{content:"+";font-size:1.3rem}
+details.settings[open]>summary::after{content:"−"}
+.setwrap{padding:0 16px 16px;display:grid;gap:16px}
+.setgrp h3{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+.setgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.setgrid .wide{grid-column:1/-1}
+.setfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+/* right side */
+.side{min-width:0;display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:920px){.side{position:static}}
+.tabs{display:flex;gap:0;border-bottom:1.5px solid var(--ink)}
+.tabs button{border:1.5px solid transparent;border-bottom:0;background:none;color:var(--muted);padding:8px 14px;font-weight:600;font-size:.9rem;border-radius:4px 4px 0 0;margin-bottom:-1.5px}
+.tabs button[aria-selected=true]{border-color:var(--ink);background:var(--surface);color:var(--ink)}
+.warns{display:grid;gap:6px}
+.warn{background:var(--warn-bg);border-left:4px solid var(--warn);color:var(--ink);padding:8px 12px;font-size:.85rem;border-radius:0 4px 4px 0}
+.toast{font-size:.85rem;color:var(--good);min-height:1.3em}
+/* paper quote */
+.paper{background:var(--paper);color:var(--paper-ink);border:1px solid var(--line);box-shadow:0 1px 0 var(--line),0 12px 28px -18px rgba(0,0,0,.35);padding:clamp(18px,4vw,40px);border-radius:2px;min-width:0}
+.p-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:3px solid var(--paper-ink);padding-bottom:12px}
+.p-biz{font-family:var(--f-display);font-weight:700;font-size:1.6rem;text-transform:uppercase;line-height:1.05;letter-spacing:.01em}
+.p-small{font-size:.8rem;color:var(--paper-muted)}
+.p-qt{text-align:right}
+.p-qt .big{font-family:var(--f-display);font-weight:700;font-size:1.6rem;letter-spacing:.12em;line-height:1}
+.p-qt .tag{display:inline-block;background:var(--accent);color:var(--on-accent);font-family:var(--f-mono);font-size:.75rem;padding:1px 6px;margin-top:4px}
+.p-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-block:16px}
+@media (max-width:560px){.p-cols{grid-template-columns:1fr}.p-qt{text-align:left}}
+.p-lab{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper-muted);font-weight:600;margin-bottom:2px}
+.p-cols div{font-size:.9rem;min-width:0;overflow-wrap:anywhere}
+.p-draw{border:1px solid var(--paper-line);background:#FAFAF8;padding:10px;margin-bottom:16px}
+.p-draw svg{display:block;width:100%;height:auto;max-height:280px}
+.lines{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.lines th{text-align:left;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper-muted);font-weight:600;border-bottom:1.5px solid var(--paper-ink);padding:6px 0}
+.lines th:last-child,.lines td:last-child{text-align:right;white-space:nowrap;padding-left:12px}
+.lines td{padding:7px 0;border-bottom:1px solid var(--paper-line);vertical-align:top}
+.lines .tot td{border-bottom:0;border-top:2px solid var(--paper-ink);font-weight:600;font-size:1.05rem;padding-top:10px}
+.lines .tot td:last-child{font-family:var(--f-display);font-size:1.6rem;font-weight:700}
+.lines .dep td{border-bottom:0;color:var(--paper-muted);font-size:.85rem;padding-top:0}
+.p-notes{margin-top:16px;display:grid;gap:10px;font-size:.85rem}
+.p-notes ul{margin:0;padding-left:18px}
+.p-terms{font-size:.78rem;color:var(--paper-muted);border-top:1px solid var(--paper-line);padding-top:10px}
+.pl{color:#9AA1A5;font-style:italic}
+/* shop sheet */
+.shop{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:18px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);padding:10px 12px}
+.kpi .k{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .v{font-family:var(--f-display);font-weight:700;font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .v.good{color:var(--good)}
+.shop h3{font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:1.05rem;margin:0 0 6px}
+.tbl{overflow-x:auto}
+.tbl table{width:100%;border-collapse:collapse;font-size:.85rem;font-variant-numeric:tabular-nums}
+.tbl th{text-align:left;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;border-bottom:1.5px solid var(--ink);padding:5px 8px 5px 0}
+.tbl td{border-bottom:1px solid var(--line);padding:6px 8px 6px 0;vertical-align:top}
+.tbl td.n,.tbl th.n{text-align:right;white-space:nowrap}
+.tbl td.m{font-family:var(--f-mono);font-size:.8rem;white-space:nowrap}
+.tbl tfoot td{font-weight:600;border-bottom:0;border-top:1.5px solid var(--ink)}
+.dims{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.mbar{display:none}
+@media (max-width:920px){.mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;justify-content:space-between;align-items:center;gap:12px;background:var(--ink);color:var(--bg);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.mbar .t{font-family:var(--f-display);font-weight:700;font-size:1.5rem;line-height:1}.mbar .l{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.mbar a{background:var(--accent);color:var(--on-accent);font-weight:600;padding:8px 14px;border-radius:4px;text-decoration:none;font-size:.9rem}
+body{padding-block:0 96px}}
+.foot{margin-top:28px;color:var(--muted);font-size:.78rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="1" y="1" width="38" height="38" rx="3" fill="var(--ink)"/>
+      <rect x="7" y="9" width="26" height="4" fill="var(--accent)"/>
+      <path d="M8 13h24l-2 8H10z" fill="var(--surface)" opacity=".25"/>
+      <rect x="7" y="23" width="26" height="4" fill="var(--accent)"/>
+      <path d="M8 27h24l-2 8H10z" fill="var(--surface)" opacity=".25"/>
+    </svg>
+    <div>
+      <h1>Tote Rack Quote</h1>
+      <div class="sub" id="bizSub">High Caliber Estate Sales</div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn" type="button" id="newQuote">New quote</button>
+    <button class="btn" type="button" id="copyText">Copy quote text</button>
+    <button class="btn primary" type="button" id="pdfQuote">Save quote PDF</button>
+  </div>
+</header>
+
+<div class="grid">
+<form id="f" autocomplete="off">
+  <fieldset>
+    <legend>Customer</legend>
+    <label class="f">Name<input type="text" id="cName" placeholder="Customer name"></label>
+    <label class="f">Address<input type="text" id="cAddr" placeholder="Street, city"></label>
+    <div class="row2">
+      <label class="f">Phone<input type="tel" id="cPhone" placeholder="(810) 555-0100"></label>
+      <label class="f">Email<input type="email" id="cEmail" placeholder="name@email.com"></label>
+    </div>
+    <div class="row2">
+      <label class="f">Quote no.<input type="text" id="qNo"></label>
+      <label class="f">Date<input type="date" id="qDate"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Rack</legend>
+    <div class="steppers">
+      <div class="stepper"><span class="lab" id="wLab">Totes wide</span>
+        <div class="ctl" role="group" aria-labelledby="wLab"><button type="button" data-step="W" data-d="-1" aria-label="Fewer columns">−</button><output id="W">6</output><button type="button" data-step="W" data-d="1" aria-label="More columns">+</button></div></div>
+      <div class="stepper"><span class="lab" id="hLab">Totes high</span>
+        <div class="ctl" role="group" aria-labelledby="hLab"><button type="button" data-step="H" data-d="-1" aria-label="Fewer rows">−</button><output id="H">5</output><button type="button" data-step="H" data-d="1" aria-label="More rows">+</button></div></div>
+    </div>
+    <div class="slots" id="slotLine"></div>
+    <div class="seg" role="radiogroup" aria-label="Build type">
+      <input type="radio" name="build" id="bWall" value="wall" checked><label for="bWall">Wall install</label>
+      <input type="radio" name="build" id="bMobile" value="mobile"><label for="bMobile">Mobile, on casters</label>
+    </div>
+    <div class="seg" role="radiogroup" aria-label="Totes">
+      <input type="radio" name="totes" id="tOwn" value="own" checked><label for="tOwn">Customer's totes</label>
+      <input type="radio" name="totes" id="tSupply" value="supply"><label for="tSupply">We supply HDX totes</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Finish</legend>
+    <div class="seg" role="radiogroup" aria-label="Finish">
+      <input type="radio" name="fin" id="fNone" value="none" checked><label for="fNone">Raw wood</label>
+      <input type="radio" name="fin" id="fClear" value="clear"><label for="fClear">Clear seal</label>
+      <input type="radio" name="fin" id="fStain" value="stain"><label for="fStain">Stain + seal</label>
+      <input type="radio" name="fin" id="fPaint" value="paint"><label for="fPaint">Paint</label>
+    </div>
+    <label class="f" id="colorWrap">Color<input type="text" id="finColor" placeholder="e.g. Behr Ultra Pure White, or Minwax Early American"></label>
+    <p class="hint" id="finHint"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Extras</legend>
+    <label class="f">Delivery / travel fee ($)<input type="number" id="delivery" min="0" step="5" value="0" inputmode="decimal"></label>
+    <div class="row2">
+      <label class="f">Adjustment label<input type="text" id="adjLabel" placeholder="e.g. Repeat customer"></label>
+      <label class="f">Adjustment ($, minus for discount)<input type="number" id="adjAmt" step="5" value="0" inputmode="decimal"></label>
+    </div>
+    <label class="f">Notes on the quote<textarea id="notes" placeholder="Anything specific to this job: location in garage, ceiling height, color match, etc."></textarea></label>
+  </fieldset>
+
+  <details class="settings" id="setBox">
+    <summary>Pricing &amp; cost settings</summary>
+    <div class="setwrap" id="setWrap"></div>
+  </details>
+</form>
+
+<section class="side" id="preview" aria-label="Preview">
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabQ" aria-selected="true" aria-controls="viewQ">Customer quote</button>
+    <button type="button" role="tab" id="tabS" aria-selected="false" aria-controls="viewS">Shop sheet (internal)</button>
+  </div>
+  <div class="warns" id="warns"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div id="viewQ" role="tabpanel" aria-labelledby="tabQ"><div class="paper" id="paper"></div></div>
+  <div id="viewS" role="tabpanel" aria-labelledby="tabS" hidden>
+    <div class="shop" id="shop"></div>
+    <div class="actions" style="margin-top:10px"><button class="btn" type="button" id="pdfShop">Save shop sheet PDF</button></div>
+  </div>
+</section>
+</div>
+<div class="mbar" aria-hidden="false"><div><div class="l">Quote total</div><div class="t" id="mTotal">$0</div></div><a href="#preview">View quote</a></div>
+<p class="foot">Prices and material costs are estimates. Check the Fort Gratiot Home Depot app for current lumber and tote prices and update the settings. Settings and the current draft save in this browser only.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+"use strict";
+const STORE_KEY="toteRackQuote.v1";
+const DEFAULTS={
+  biz:{name:"High Caliber Estate Sales",line:"Tote storage racks · Port Huron, MI",phone:"",email:""},
+  price:{base:395,baseSlots:12,perSlot:20,mobile:75,tote:14,toteTax:0,deposit:50,validDays:30,
+    fin:{clear:{base:60,rate:5},stain:{base:90,rate:9},paint:{base:100,rate:10}}},
+  cost:{s8:4,s10:5.5,s12:7,s16:11,toteCost:8.98,purchaseTax:6,caster:10,screwsBase:20,screwsPerSlot:0.75,wallHw:15,
+    paintGal:40,stainGal:40,clearGal:50,coverage:250,finSupplies:15},
+  geo:{gap:19,pitch:17,depth:27},
+  labor:{base:1,perBoard:0.12,perSlot:0.15,install:1.5,deliver:0.75,coatSetup:0.5,coatPerBoard:0.05},
+  terms:"Quote good for {days} days. A {deposit}% deposit schedules the build; the balance is due when the rack is delivered or installed. Wall units are screwed into wall studs, and we confirm stud locations on install day. Please clear the work area before we arrive."
+};
+const SCHEMA=[
+  ["Business on the quote",[["biz.name","Business name","text",1],["biz.line","Tagline / city","text",1],["biz.phone","Phone","text"],["biz.email","Email","text"]]],
+  ["Customer pricing",[["price.base","Starting price ($)"],["price.baseSlots","Slots included"],["price.perSlot","Each extra slot ($)"],["price.mobile","Mobile base add-on ($)"],["price.tote","Tote, each ($)"],["price.toteTax","Sales tax on totes (%)"],["price.deposit","Deposit (%)"],["price.validDays","Quote good for (days)"]]],
+  ["Finish pricing",[["price.fin.clear.base","Clear seal, setup ($)"],["price.fin.clear.rate","Clear seal, per slot ($)"],["price.fin.stain.base","Stain + seal, setup ($)"],["price.fin.stain.rate","Stain + seal, per slot ($)"],["price.fin.paint.base","Paint, setup ($)"],["price.fin.paint.rate","Paint, per slot ($)"]]],
+  ["Your costs",[["cost.s8","2x4x8 each ($)"],["cost.s10","2x4x10 each ($)"],["cost.s12","2x4x12 each ($)"],["cost.s16","2x4x16 each ($)"],["cost.toteCost","HDX 27-gal tote ($)"],["cost.purchaseTax","Tax you pay (%)"],["cost.caster","Locking caster each ($)"],["cost.screwsBase","Screws per rack ($)"],["cost.screwsPerSlot","Screws per slot ($)"],["cost.wallHw","Wall anchor screws ($)"],["cost.paintGal","Paint per gallon ($)"],["cost.stainGal","Stain per gallon ($)"],["cost.clearGal","Clear coat per gallon ($)"],["cost.coverage","Coverage, raw pine (sq ft/gal)"],["cost.finSupplies","Rollers, brushes, rags ($)"]]],
+  ["Build geometry (inches)",[["geo.gap","Rail gap: under-lip width + 1/4"],["geo.pitch","Row spacing"],["geo.depth","Rail length / rack depth"]]],
+  ["Labor estimate (hours)",[["labor.base","Setup per job"],["labor.perBoard","Per board"],["labor.perSlot","Per slot"],["labor.install","Wall install on site"],["labor.deliver","Mobile delivery"],["labor.coatSetup","Setup per finish coat"],["labor.coatPerBoard","Per board per coat"]]],
+  ["Terms",[["terms","Terms text. {days} and {deposit} fill in automatically.","textarea",1]]]
+];
+const FIN_NAMES={none:"Raw wood",clear:"Clear seal (water-based polyurethane, 1 coat)",stain:"Stain + clear seal",paint:"Paint, 2 coats"};
+const FIN_HINTS={
+  none:"Unfinished kiln-dried pine. Fine for a garage; it will yellow and pick up dirt over time.",
+  clear:"One coat of water-based poly on every board. Keeps the natural wood look and wipes clean.",
+  stain:"Stain on frames and stretchers, then clear coat on everything. Rails get clear only.",
+  paint:"Two coats on frames and stretchers. Rails get clear coat only so totes don't scrape the paint off."
+};
+
+const clone=o=>JSON.parse(JSON.stringify(o));
+function merge(base,over){if(!over||typeof over!=="object")return base;for(const k of Object.keys(base)){if(base[k]&&typeof base[k]==="object"){merge(base[k],over[k]);}else if(over[k]!==undefined&&over[k]!==null&&over[k]!==""){base[k]=typeof base[k]==="number"?Number(over[k]):over[k];}}return base;}
+const getP=(o,p)=>p.split(".").reduce((a,k)=>a&&a[k],o);
+function setP(o,p,v){const ks=p.split(".");let a=o;for(let i=0;i<ks.length-1;i++)a=a[ks[i]];a[ks[ks.length-1]]=v;}
+
+let S=clone(DEFAULTS);
+let saved=null;
+try{saved=JSON.parse(localStorage.getItem(STORE_KEY)||"null");}catch(e){saved=null;}
+if(saved&&saved.settings)S=merge(clone(DEFAULTS),saved.settings);
+
+const $=id=>document.getElementById(id);
+const state={W:6,H:5};
+
+/* ---------- formatting ---------- */
+function money(n){const r=Math.round(n*100)/100;const neg=r<0;const a=Math.abs(r);const s=Number.isInteger(a)?a.toLocaleString("en-US"):a.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});return (neg?"−$":"$")+s;}
+function frac(x){const q=Math.round(x*8)/8;const w=Math.floor(q);const f=Math.round((q-w)*8);const m={0:"",1:"1/8",2:"1/4",3:"3/8",4:"1/2",5:"5/8",6:"3/4",7:"7/8"};return {w,f:m[f]};}
+function fmtIn(x){const {w,f}=frac(x);return (f?(w?w+"-"+f:f):String(w))+'"';}
+function fmtFtIn(x){const q=Math.round(x*8)/8;const ft=Math.floor(q/12);const rem=q-ft*12;if(!ft)return fmtIn(rem);return ft+"' "+fmtIn(rem);}
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function todayISO(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);}
+function fmtDate(iso){if(!iso)return "";const [y,m,d]=iso.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});}
+function addDays(iso,n){const [y,m,d]=iso.split("-").map(Number);const t=new Date(y,m-1,d+n);return t.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});}
+function defaultQNo(){const d=todayISO().replace(/-/g,"").slice(2);return "HC-"+d+"-01";}
+
+/* ---------- the model ---------- */
+function compute(S,cfg){
+  const {W,H,mobile,supply,finish}=cfg;
+  const G=+S.geo.gap,P=+S.geo.pitch,D=+S.geo.depth;
+  const slots=W*H;
+  const U=H*P+6;                               // upright length
+  const Wt=W*G+(W-1)*4.5+6;                    // overall width
+  const rackH=U+(mobile?5.5:0);
+  const stockFor=len=>len<=96?8:len<=120?10:len<=144?12:len<=192?16:null;
+  const stock={8:0,10:0,12:0,16:0};
+  const add=(ft,n)=>{stock[ft]=(stock[ft]||0)+n;};
+  const pieces=[];
+  // uprights
+  const upQty=2*(W+1);
+  const upStock=stockFor(U)||16;
+  add(upStock,upQty);
+  pieces.push({part:"Uprights",qty:upQty,len:U,from:"2x4x"+upStock,rail:false});
+  // short pieces: rails and mobile base cross pieces, all at depth D
+  const railQty=2*W*H, baseQty=mobile?W+1:0, shortQty=railQty+baseQty;
+  const perBoard=Math.floor(96/(D+0.125));
+  const perOff=Math.max(0,Math.floor((upStock*12-U)/(D+0.125)));
+  const fromOff=Math.min(shortQty,upQty*perOff);
+  const shortBoards=Math.ceil((shortQty-fromOff)/perBoard);
+  add(8,shortBoards);
+  pieces.push({part:"Tote rails",qty:railQty,len:D,from:fromOff?("2x4x8, "+perBoard+" per board; "+fromOff+" from upright offcuts"):("2x4x8, "+perBoard+" per board"),rail:true});
+  if(baseQty)pieces.push({part:"Base cross pieces (under each frame)",qty:baseQty,len:D,from:"2x4x8 (same cut as rails)",rail:false});
+  // stretchers
+  let strStock=stockFor(Wt),strPer=1,spliced=false;
+  if(!strStock){strStock=8;strPer=Math.ceil(Wt/96);spliced=true;}
+  add(strStock,4*strPer);
+  pieces.push({part:"Stretchers, top and bottom, front and back",qty:4,len:Wt,from:spliced?(strPer+" x 2x4x8 spliced over frames"):"2x4x"+strStock,rail:false});
+  // braces
+  let braceQty=0;
+  if(mobile){
+    braceQty=Math.ceil(W/2);
+    const bl=Math.hypot(Math.min(2,W)*(G+4.5),U-8);
+    const bs=stockFor(bl)||16;
+    add(bs,braceQty);
+    pieces.push({part:"Back diagonal braces",qty:braceQty,len:bl,from:"2x4x"+bs+", cut angles to fit",rail:false});
+  }
+  const boards=Object.values(stock).reduce((a,b)=>a+b,0);
+  const lumberCost=stock[8]*S.cost.s8+stock[10]*S.cost.s10+stock[12]*S.cost.s12+stock[16]*S.cost.s16;
+  const casters=mobile?(W<=2?4:W<=4?6:8):0;
+  const screws=S.cost.screwsBase+S.cost.screwsPerSlot*slots;
+  const hwCost=screws+(mobile?casters*S.cost.caster:S.cost.wallHw);
+  const toteUnit=S.cost.toteCost*(1+S.cost.purchaseTax/100);
+  const toteCost=supply?slots*toteUnit:0;
+  // finish area, sq ft (2x4 perimeter = 10 in)
+  let railArea=0,otherArea=0;
+  pieces.forEach(p=>{const a=p.qty*p.len*10/144;if(p.rail)railArea+=a;else otherArea+=a;});
+  const allArea=railArea+otherArea;
+  const cov=S.cost.coverage||250;
+  let gal={paint:0,stain:0,clear:0},coats=0;
+  if(finish==="clear"){gal.clear=allArea/cov;coats=1;}
+  if(finish==="stain"){gal.stain=otherArea/cov;gal.clear=allArea/cov;coats=2;}
+  if(finish==="paint"){gal.paint=otherArea*2/cov;gal.clear=railArea/cov;coats=2;}
+  const finMat=finish==="none"?0:gal.paint*S.cost.paintGal+gal.stain*S.cost.stainGal+gal.clear*S.cost.clearGal+S.cost.finSupplies;
+  // customer price
+  const L=S.price;
+  const lines=[];
+  lines.push({d:"Tote storage rack, built to fit HDX 27-gal totes (up to "+L.baseSlots+" slots)",a:+L.base});
+  const extra=Math.max(0,slots-L.baseSlots);
+  if(extra)lines.push({d:"Additional slots ("+extra+" × "+money(L.perSlot)+")",a:extra*L.perSlot});
+  if(mobile)lines.push({d:"Mobile base with "+casters+" locking casters",a:+L.mobile});
+  let finPrice=0;
+  if(finish!=="none"){const fp=L.fin[finish];finPrice=fp.base+fp.rate*slots;lines.push({d:FIN_NAMES[finish]+(cfg.color?(", "+cfg.color):""),a:finPrice});}
+  let toteRev=0,toteTax=0;
+  if(supply){toteRev=slots*L.tote;lines.push({d:"HDX 27-gal Tough Totes with lids ("+slots+" × "+money(L.tote)+")",a:toteRev});
+    if(L.toteTax>0){toteTax=toteRev*L.toteTax/100;lines.push({d:"Sales tax on totes ("+L.toteTax+"%)",a:toteTax});}}
+  if(cfg.delivery)lines.push({d:"Delivery / travel",a:+cfg.delivery});
+  if(cfg.adjAmt)lines.push({d:cfg.adjLabel||(cfg.adjAmt<0?"Discount":"Adjustment"),a:+cfg.adjAmt});
+  const total=lines.reduce((s,l)=>s+l.a,0);
+  const deposit=total*L.deposit/100;
+  const cost=lumberCost+hwCost+toteCost+finMat;
+  const profit=total-toteTax-cost;
+  const lb=S.labor;
+  const buildHrs=lb.base+lb.perBoard*boards+lb.perSlot*slots+(mobile?lb.deliver:lb.install);
+  const finHrs=coats*(lb.coatSetup+lb.coatPerBoard*boards);
+  const hours=buildHrs+finHrs;
+  // warnings
+  const warns=[];
+  warns.push("Measure one tote under the lip before cutting. Rail gap is set to "+fmtIn(G)+"; it should be that width + 1/4\".");
+  if(mobile&&rackH>80)warns.push("At "+fmtIn(rackH)+" tall on casters, this won't roll upright through a standard 80\" door. Drop a row or build it on site.");
+  if(mobile&&W>4)warns.push("Mobile racks wider than 4 get heavy and wobbly. A wall install is the better build here.");
+  if(!mobile&&rackH>94)warns.push("Uprights are "+fmtIn(U)+". Confirm ceiling height; you need room to tip each frame up.");
+  if(spliced)warns.push("Stretchers are longer than a 16' board, so they splice over a frame. Stagger the splices front and back.");
+  // shopping list
+  const shop=[];
+  [8,10,12,16].forEach(ft=>{if(stock[ft])shop.push({i:"2x4x"+ft+" stud",q:stock[ft],c:stock[ft]*S.cost["s"+ft]});});
+  shop.push({i:"3\" construction screws",q:"1 box",c:screws});
+  if(mobile)shop.push({i:"Locking swivel casters, 3–4\"",q:casters,c:casters*S.cost.caster});
+  else shop.push({i:"Structural screws for wall anchoring",q:"1 pack",c:S.cost.wallHw});
+  if(supply)shop.push({i:"HDX 27-gal Tough Tote, black/yellow",q:slots,c:toteCost});
+  const qt=g=>Math.ceil(g*4)/4;
+  if(gal.paint)shop.push({i:"Paint ("+(cfg.color||"color TBD")+")",q:qt(gal.paint)+" gal",c:gal.paint*S.cost.paintGal});
+  if(gal.stain)shop.push({i:"Stain ("+(cfg.color||"color TBD")+")",q:qt(gal.stain)+" gal",c:gal.stain*S.cost.stainGal});
+  if(gal.clear)shop.push({i:"Water-based polyurethane, clear",q:qt(gal.clear)+" gal",c:gal.clear*S.cost.clearGal});
+  if(finish!=="none")shop.push({i:"Rollers, brushes, rags",q:"",c:S.cost.finSupplies});
+  return {W,H,G,P,D,U,Wt,rackH,slots,mobile,supply,finish,stock,pieces,boards,casters,lines,total,deposit,cost,profit,
+    lumberCost,hwCost,toteCost,finMat,buildHrs,finHrs,hours,warns,shop,allArea,toteTax};
+}
+
+/* ---------- elevation geometry, shared by SVG and PDF ---------- */
+function shapes(r){
+  const out=[];const {W,H,G,P,U,Wt,mobile}=r;
+  const bay=j=>3+j*(G+4.5);
+  out.push({t:"rect",x:0,y:0,w:Wt,h:3.5,k:"wood2"});
+  out.push({t:"rect",x:0,y:U-3.5,w:Wt,h:3.5,k:"wood2"});
+  const upX=[0];for(let j=0;j<W-1;j++)upX.push(bay(j)+G+1.5);upX.push(Wt-1.5);
+  upX.forEach(x=>out.push({t:"rect",x,y:0,w:1.5,h:U,k:"wood"}));
+  for(let i=0;i<H;i++){
+    const yr=5+i*P;
+    for(let j=0;j<W;j++){
+      const b=bay(j);
+      out.push({t:"rect",x:b-1.5,y:yr,w:1.5,h:3.5,k:"wood"});
+      out.push({t:"rect",x:b+G,y:yr,w:1.5,h:3.5,k:"wood"});
+      const cx=b+G/2;
+      out.push({t:"poly",pts:[[cx-9.5,yr],[cx+9.5,yr],[cx+8.2,yr+13.8],[cx-8.2,yr+13.8]],k:"tote"});
+      out.push({t:"rect",x:cx-9.8,y:yr-1.2,w:19.6,h:1.6,k:"lid"});
+    }
+  }
+  if(mobile){
+    out.push({t:"rect",x:0,y:U,w:Wt,h:1.5,k:"wood2"});
+    const n=r.casters/2;
+    for(let c=0;c<n;c++){const x=n===1?Wt/2:2+c*(Wt-4)/(n-1);out.push({t:"circ",x,y:U+3.5,r:2,k:"caster"});}
+  }
+  return out;
+}
+function elevationSVG(r){
+  const pad=6,dim=14;const fs=Math.max(r.Wt,r.rackH)/26;
+  const vbx=-pad,vby=-pad,vbw=r.Wt+pad*2+dim,vbh=r.rackH+pad*2+dim;
+  let s='<svg viewBox="'+vbx+' '+vby+' '+vbw+' '+vbh+'" role="img" aria-label="Front view of the rack, '+r.W+' wide by '+r.H+' high">';
+  const fill={wood:"#D4A86E",wood2:"#B98A50",tote:"#2A2F33",lid:"#F2C200",caster:"#4A5054"};
+  shapes(r).forEach(o=>{
+    const st=' fill="'+fill[o.k]+'" stroke="#1A1D1F" stroke-width="0.6" vector-effect="non-scaling-stroke"';
+    if(o.t==="rect")s+='<rect x="'+o.x+'" y="'+o.y+'" width="'+o.w+'" height="'+o.h+'"'+st+'/>';
+    else if(o.t==="poly")s+='<polygon points="'+o.pts.map(p=>p.join(",")).join(" ")+'"'+st+'/>';
+    else s+='<circle cx="'+o.x+'" cy="'+o.y+'" r="'+o.r+'"'+st+'/>';
+  });
+  const y=r.rackH+dim*0.55,x=r.Wt+dim*0.55;
+  const ln='stroke="#6A7277" stroke-width="0.8" vector-effect="non-scaling-stroke" fill="none"';
+  s+='<path d="M0 '+(y-2)+'V'+(y+2)+'M0 '+y+'H'+r.Wt+'M'+r.Wt+' '+(y-2)+'V'+(y+2)+'" '+ln+'/>';
+  s+='<text x="'+(r.Wt/2)+'" y="'+(y-1.2)+'" text-anchor="middle" font-size="'+fs+'" font-family="IBM Plex Mono,monospace" fill="#1A1D1F">'+esc(fmtFtIn(r.Wt))+' wide</text>';
+  s+='<path d="M'+(x-2)+' 0H'+(x+2)+'M'+x+' 0V'+r.rackH+'M'+(x-2)+' '+r.rackH+'H'+(x+2)+'" '+ln+'/>';
+  s+='<text transform="translate('+(x-1.2)+' '+(r.rackH/2)+') rotate(-90)" text-anchor="middle" font-size="'+fs+'" font-family="IBM Plex Mono,monospace" fill="#1A1D1F">'+esc(fmtFtIn(r.rackH))+' tall</text>';
+  return s+"</svg>";
+}
+
+/* ---------- read form ---------- */
+function cfg(){
+  return {W:state.W,H:state.H,
+    mobile:document.querySelector('input[name=build]:checked').value==="mobile",
+    supply:document.querySelector('input[name=totes]:checked').value==="supply",
+    finish:document.querySelector('input[name=fin]:checked').value,
+    color:$("finColor").value.trim(),
+    delivery:Number($("delivery").value)||0,
+    adjLabel:$("adjLabel").value.trim(),adjAmt:Number($("adjAmt").value)||0,
+    notes:$("notes").value.trim(),
+    cName:$("cName").value.trim(),cAddr:$("cAddr").value.trim(),cPhone:$("cPhone").value.trim(),cEmail:$("cEmail").value.trim(),
+    qNo:$("qNo").value.trim(),qDate:$("qDate").value||todayISO()};
+}
+function summaryLine(r){return (r.mobile?"Mobile tote rack on locking casters":"Wall-mounted tote rack")+", "+r.W+" wide × "+r.H+" high ("+r.slots+" totes).";}
+function dimsLine(r){return "About "+fmtFtIn(r.Wt)+" wide × "+fmtFtIn(r.rackH)+" tall × "+fmtIn(r.D)+" deep (totes stick out about 1-1/2\" in front).";}
+function included(r,c){
+  const a=["Kiln-dried 2x4 framing lumber, screwed together (no nails)."];
+  if(r.mobile)a.push(r.casters+" locking casters. Built in our shop and delivered assembled.");
+  else a.push("Built to fit the space and anchored into wall studs with structural screws.");
+  if(r.finish==="paint"||r.finish==="stain")a.push("Tote rails get clear coat only, so totes slide in and out without scraping the finish.");
+  a.push(r.supply?r.slots+" new HDX 27-gallon Tough Totes with lids included.":"Sized for HDX 27-gallon Tough Totes. Other brands differ in size and may not fit.");
+  return a;
+}
+function termsText(){return String(S.terms).replace(/\{days\}/g,S.price.validDays).replace(/\{deposit\}/g,S.price.deposit);}
+
+/* ---------- render ---------- */
+function render(){
+  const c=cfg();const r=compute(S,c);
+  $("W").textContent=state.W;$("H").textContent=state.H;
+  $("slotLine").innerHTML="<b>"+r.slots+"</b> slots · "+esc(fmtFtIn(r.Wt))+" W × "+esc(fmtFtIn(r.rackH))+" H × "+esc(fmtIn(r.D))+" D";
+  $("colorWrap").hidden=!(c.finish==="paint"||c.finish==="stain");
+  $("finHint").textContent=FIN_HINTS[c.finish];
+  $("bizSub").textContent=S.biz.name;
+  $("warns").innerHTML=r.warns.map(w=>'<div class="warn">'+esc(w)+"</div>").join("");
+  const ph=(v,p)=>v?esc(v):'<span class="pl">'+esc(p)+"</span>";
+  $("paper").innerHTML=
+   '<div class="p-head"><div><div class="p-biz">'+esc(S.biz.name)+'</div><div class="p-small">'+esc(S.biz.line)+'</div><div class="p-small">'+esc(S.biz.phone)+" · "+esc(S.biz.email)+'</div></div>'+
+   '<div class="p-qt"><div class="big">QUOTE</div><div class="tag">'+esc(c.qNo||"—")+'</div><div class="p-small">'+esc(fmtDate(c.qDate))+'</div><div class="p-small">Good through '+esc(addDays(c.qDate,+S.price.validDays))+"</div></div></div>"+
+   '<div class="p-cols"><div><div class="p-lab">Prepared for</div>'+ph(c.cName,"Customer name")+"<br>"+ph(c.cAddr,"Address")+(c.cPhone?"<br>"+esc(c.cPhone):"")+(c.cEmail?"<br>"+esc(c.cEmail):"")+"</div>"+
+   '<div><div class="p-lab">Project</div>'+esc(summaryLine(r))+"<br>"+esc(dimsLine(r))+"</div></div>"+
+   '<div class="p-draw">'+elevationSVG(r)+"</div>"+
+   '<table class="lines"><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>'+
+   r.lines.map(l=>"<tr><td>"+esc(l.d)+"</td><td>"+money(l.a)+"</td></tr>").join("")+
+   '<tr class="tot"><td>Total</td><td>'+money(r.total)+'</td></tr><tr class="dep"><td>Deposit to schedule ('+S.price.deposit+'%)</td><td>'+money(r.deposit)+"</td></tr></tbody></table>"+
+   '<div class="p-notes"><div><div class="p-lab">What\'s included</div><ul>'+included(r,c).map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul></div>"+
+   (c.notes?'<div><div class="p-lab">Notes</div>'+esc(c.notes).replace(/\n/g,"<br>")+"</div>":"")+
+   '<div class="p-terms">'+esc(termsText())+"</div></div>";
+  const perHr=r.hours?r.profit/r.hours:0;
+  $("shop").innerHTML=
+   '<div class="kpis"><div class="kpi"><div class="k">Quote total</div><div class="v">'+money(r.total)+'</div></div><div class="kpi"><div class="k">Your cost</div><div class="v">'+money(Math.round(r.cost))+'</div></div><div class="kpi"><div class="k">Profit</div><div class="v good">'+money(Math.round(r.profit))+'</div></div><div class="kpi"><div class="k">Est. hours</div><div class="v">'+r.hours.toFixed(1)+'</div></div><div class="kpi"><div class="k">Per hour</div><div class="v">'+money(Math.round(perHr))+"</div></div></div>"+
+   '<div class="dims">'+esc(summaryLine(r))+" "+esc(fmtFtIn(r.Wt))+" W × "+esc(fmtFtIn(r.rackH))+" H × "+esc(fmtIn(r.D))+" D · uprights "+esc(fmtIn(r.U))+" · rail gap "+esc(fmtIn(r.G))+" · rows every "+esc(fmtIn(r.P))+"</div>"+
+   '<div><h3>Cut list</h3><div class="tbl"><table><thead><tr><th>Part</th><th class="n">Qty</th><th class="n">Length</th><th>Cut from</th></tr></thead><tbody>'+
+   r.pieces.map(p=>"<tr><td>"+esc(p.part)+'</td><td class="n">'+p.qty+'</td><td class="n m">'+esc(fmtIn(p.len))+"</td><td>"+esc(p.from)+"</td></tr>").join("")+"</tbody></table></div></div>"+
+   '<div><h3>Shopping list</h3><div class="tbl"><table><thead><tr><th>Item</th><th class="n">Qty</th><th class="n">Est. cost</th></tr></thead><tbody>'+
+   r.shop.map(s=>"<tr><td>"+esc(s.i)+'</td><td class="n">'+esc(s.q)+'</td><td class="n">'+money(s.c)+"</td></tr>").join("")+
+   '</tbody><tfoot><tr><td>Materials total</td><td></td><td class="n">'+money(r.cost)+"</td></tr></tfoot></table></div></div>"+
+   '<div><h3>Hours</h3><div class="tbl"><table><tbody><tr><td>Cut, assemble, '+(r.mobile?"deliver":"install")+'</td><td class="n">'+r.buildHrs.toFixed(1)+" hr</td></tr>"+
+   (r.finHrs?"<tr><td>Finish ("+esc(FIN_NAMES[r.finish])+', about '+Math.round(r.allArea)+' sq ft of lumber)</td><td class="n">'+r.finHrs.toFixed(1)+" hr</td></tr>":"")+
+   "</tbody></table></div></div>";
+  $("mTotal").textContent=money(r.total);
+  persist();
+}
+
+/* ---------- settings UI ---------- */
+function buildSettings(){
+  let h="";
+  SCHEMA.forEach(([title,fields])=>{
+    h+='<div class="setgrp"><h3>'+esc(title)+'</h3><div class="setgrid">';
+    fields.forEach(([path,label,type,wide])=>{
+      const id="s_"+path.replace(/\./g,"_");const v=getP(S,path);
+      if(type==="textarea")h+='<label class="f wide">'+esc(label)+'<textarea id="'+id+'" data-path="'+path+'" rows="4">'+esc(v)+"</textarea></label>";
+      else if(type==="text")h+='<label class="f'+(wide?" wide":"")+'">'+esc(label)+'<input type="text" id="'+id+'" data-path="'+path+'" value="'+esc(v)+'"></label>';
+      else h+='<label class="f">'+esc(label)+'<input type="number" step="any" inputmode="decimal" id="'+id+'" data-path="'+path+'" value="'+esc(v)+'"></label>';
+    });
+    h+="</div></div>";
+  });
+  h+='<div class="setfoot"><p class="hint">Changes apply right away and save in this browser.</p><button type="button" class="btn" id="resetSet">Reset to defaults</button></div>';
+  $("setWrap").innerHTML=h;
+  $("setWrap").querySelectorAll("[data-path]").forEach(el=>el.addEventListener("input",()=>{
+    const p=el.dataset.path;const d=getP(DEFAULTS,p);
+    if(typeof d==="number"){const n=parseFloat(el.value);if(!isNaN(n))setP(S,p,n);}else setP(S,p,el.value);
+    render();
+  }));
+  $("resetSet").addEventListener("click",()=>{S=clone(DEFAULTS);buildSettings();render();toast("Settings reset to defaults.");});
+}
+
+/* ---------- persistence (this browser only) ---------- */
+const FORM_IDS=["cName","cAddr","cPhone","cEmail","qNo","qDate","finColor","delivery","adjLabel","adjAmt","notes"];
+function persist(){
+  try{const form={};FORM_IDS.forEach(id=>form[id]=$(id).value);
+    form.build=document.querySelector('input[name=build]:checked').value;
+    form.totes=document.querySelector('input[name=totes]:checked').value;
+    form.fin=document.querySelector('input[name=fin]:checked').value;
+    form.W=state.W;form.H=state.H;
+    localStorage.setItem(STORE_KEY,JSON.stringify({settings:S,form}));}catch(e){}
+}
+function restore(){
+  $("qNo").value=defaultQNo();$("qDate").value=todayISO();
+  const f=saved&&saved.form;if(!f)return;
+  FORM_IDS.forEach(id=>{if(f[id]!==undefined)$(id).value=f[id];});
+  [["build",f.build],["totes",f.totes],["fin",f.fin]].forEach(([n,v])=>{const el=document.querySelector('input[name='+n+'][value="'+v+'"]');if(el)el.checked=true;});
+  if(f.W)state.W=f.W;if(f.H)state.H=f.H;
+}
+
+/* ---------- text + PDF ---------- */
+function quoteText(){
+  const c=cfg(),r=compute(S,c);
+  const L=[];
+  L.push(S.biz.name.toUpperCase()+" · QUOTE "+c.qNo);
+  L.push(fmtDate(c.qDate)+" · good through "+addDays(c.qDate,+S.price.validDays));
+  L.push("");
+  if(c.cName)L.push("Prepared for: "+c.cName+(c.cAddr?", "+c.cAddr:""));
+  L.push(summaryLine(r));L.push(dimsLine(r));L.push("");
+  r.lines.forEach(l=>L.push(l.d+": "+money(l.a)));
+  L.push("TOTAL: "+money(r.total));
+  L.push("Deposit to schedule ("+S.price.deposit+"%): "+money(r.deposit));
+  L.push("");L.push("What's included:");included(r,c).forEach(x=>L.push("- "+x));
+  if(c.notes){L.push("");L.push("Notes: "+c.notes);}
+  L.push("");L.push(termsText());L.push("");
+  L.push(S.biz.name+" · "+S.biz.phone+" · "+S.biz.email);
+  return L.join("\n");
+}
+
+function pdfRack(doc,r,x,y,w,h){
+  const dim=14;const s=Math.min(w/(r.Wt+dim),h/(r.rackH+dim));
+  const ox=x+(w-(r.Wt+dim)*s)/2,oy=y+(h-(r.rackH+dim)*s)/2;
+  const col={wood:[212,168,110],wood2:[185,138,80],tote:[42,47,51],lid:[242,194,0],caster:[74,80,84]};
+  doc.setDrawColor(26,29,31);doc.setLineWidth(0.4);
+  shapes(r).forEach(o=>{
+    doc.setFillColor.apply(doc,col[o.k]);
+    if(o.t==="rect")doc.rect(ox+o.x*s,oy+o.y*s,o.w*s,o.h*s,"FD");
+    else if(o.t==="circ")doc.circle(ox+o.x*s,oy+o.y*s,o.r*s,"FD");
+    else{const p=o.pts;const d=[];for(let i=1;i<p.length;i++)d.push([(p[i][0]-p[i-1][0])*s,(p[i][1]-p[i-1][1])*s]);doc.lines(d,ox+p[0][0]*s,oy+p[0][1]*s,[1,1],"FD",true);}
+  });
+  doc.setDrawColor(106,114,119);doc.setLineWidth(0.6);
+  const yy=oy+(r.rackH+dim*0.55)*s,xx=ox+(r.Wt+dim*0.55)*s;
+  doc.line(ox,yy,ox+r.Wt*s,yy);doc.line(ox,yy-3,ox,yy+3);doc.line(ox+r.Wt*s,yy-3,ox+r.Wt*s,yy+3);
+  doc.line(xx,oy,xx,oy+r.rackH*s);doc.line(xx-3,oy,xx+3,oy);doc.line(xx-3,oy+r.rackH*s,xx+3,oy+r.rackH*s);
+  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(26,29,31);
+  doc.text(fmtFtIn(r.Wt)+" wide",ox+r.Wt*s/2,yy-3,{align:"center"});
+  const hl=fmtFtIn(r.rackH)+" tall";doc.text(hl,xx-3,oy+r.rackH*s/2+doc.getTextWidth(hl)/2,{angle:90});
+}
+
+function buildQuotePDF(){
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"pt",format:"letter"});
+  const c=cfg(),r=compute(S,c);const M=48,PW=612,CW=PW-2*M;let y=56;
+  const ink=()=>doc.setTextColor(26,29,31),mut=()=>doc.setTextColor(106,114,119);
+  doc.setFont("helvetica","bold");doc.setFontSize(18);ink();doc.text(S.biz.name.toUpperCase(),M,y);
+  doc.setFont("helvetica","normal");doc.setFontSize(9);mut();doc.text(S.biz.line,M,y+14);doc.text(S.biz.phone+"  ·  "+S.biz.email,M,y+26);
+  doc.setFont("helvetica","bold");doc.setFontSize(20);ink();doc.text("QUOTE",PW-M,y,{align:"right",charSpace:2});
+  doc.setFont("helvetica","normal");doc.setFontSize(9);
+  doc.setFillColor(242,194,0);const qw=doc.getTextWidth(c.qNo||"-")+10;doc.rect(PW-M-qw,y+6,qw,13,"F");ink();doc.text(c.qNo||"-",PW-M-5,y+15.5,{align:"right"});
+  mut();doc.text(fmtDate(c.qDate),PW-M,y+31,{align:"right"});doc.text("Good through "+addDays(c.qDate,+S.price.validDays),PW-M,y+42,{align:"right"});
+  y+=52;doc.setDrawColor(26,29,31);doc.setLineWidth(2);doc.line(M,y,PW-M,y);y+=20;
+  const half=CW/2-10;
+  const lab=(t,x,yy)=>{doc.setFont("helvetica","bold");doc.setFontSize(7);mut();doc.text(t.toUpperCase(),x,yy,{charSpace:1});};
+  lab("Prepared for",M,y);lab("Project",M+CW/2+10,y);
+  doc.setFont("helvetica","normal");doc.setFontSize(10);ink();
+  const left=[c.cName||"",c.cAddr||"",c.cPhone||"",c.cEmail||""].filter(Boolean);
+  let ly=y+14;left.forEach(t=>{doc.splitTextToSize(t,half).forEach(s=>{doc.text(s,M,ly);ly+=13;});});
+  let ry=y+14;doc.splitTextToSize(summaryLine(r)+" "+dimsLine(r),half).forEach(s=>{doc.text(s,M+CW/2+10,ry);ry+=13;});
+  y=Math.max(ly,ry)+8;
+  doc.setDrawColor(220,224,226);doc.setLineWidth(0.8);doc.setFillColor(250,250,248);doc.rect(M,y,CW,170,"FD");
+  pdfRack(doc,r,M+10,y+8,CW-20,154);y+=188;
+  doc.setFont("helvetica","bold");doc.setFontSize(7);mut();doc.text("DESCRIPTION",M,y,{charSpace:1});doc.text("AMOUNT",PW-M,y,{align:"right",charSpace:1});
+  y+=6;doc.setDrawColor(26,29,31);doc.setLineWidth(1);doc.line(M,y,PW-M,y);y+=14;
+  doc.setFont("helvetica","normal");doc.setFontSize(10);
+  r.lines.forEach(l=>{ink();const ls=doc.splitTextToSize(l.d,CW-90);ls.forEach((s,i)=>doc.text(s,M,y+i*12));doc.text(money(l.a).replace("−","-"),PW-M,y,{align:"right"});y+=ls.length*12+4;doc.setDrawColor(220,224,226);doc.setLineWidth(0.6);doc.line(M,y-8,PW-M,y-8);y+=6;});
+  doc.setDrawColor(26,29,31);doc.setLineWidth(1.5);doc.line(M,y-8,PW-M,y-8);y+=8;
+  doc.setFont("helvetica","bold");doc.setFontSize(12);ink();doc.text("Total",M,y);doc.setFontSize(16);doc.text(money(r.total).replace("−","-"),PW-M,y,{align:"right"});
+  y+=16;doc.setFont("helvetica","normal");doc.setFontSize(9);mut();doc.text("Deposit to schedule ("+S.price.deposit+"%)",M,y);doc.text(money(r.deposit).replace("−","-"),PW-M,y,{align:"right"});
+  y+=24;lab("What's included",M,y);y+=13;doc.setFont("helvetica","normal");doc.setFontSize(9.5);ink();
+  included(r,c).forEach(t=>{const ls=doc.splitTextToSize(t,CW-12);doc.text("•",M,y);ls.forEach((s,i)=>doc.text(s,M+10,y+i*12));y+=ls.length*12+2;});
+  if(c.notes){y+=8;lab("Notes",M,y);y+=13;doc.setFont("helvetica","normal");doc.setFontSize(9.5);ink();doc.splitTextToSize(c.notes,CW).forEach(s=>{if(y>740){doc.addPage();y=56;}doc.text(s,M,y);y+=12;});}
+  y+=10;if(y>700){doc.addPage();y=56;}
+  doc.setDrawColor(220,224,226);doc.setLineWidth(0.6);doc.line(M,y,PW-M,y);y+=13;doc.setFontSize(8.5);mut();
+  doc.splitTextToSize(termsText(),CW).forEach(s=>{doc.text(s,M,y);y+=11;});
+  doc.setFontSize(8.5);mut();doc.text("Thank you for the opportunity.  "+S.biz.name+"  ·  "+S.biz.phone+"  ·  "+S.biz.email,PW/2,770,{align:"center"});
+  return doc;
+}
+
+function buildShopPDF(){
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"pt",format:"letter"});
+  const c=cfg(),r=compute(S,c);const M=48,PW=612,CW=PW-2*M;let y=56;
+  const ink=()=>doc.setTextColor(26,29,31),mut=()=>doc.setTextColor(106,114,119);
+  doc.setFont("helvetica","bold");doc.setFontSize(16);ink();doc.text("SHOP SHEET  ·  "+(c.qNo||""),M,y);
+  doc.setFont("helvetica","normal");doc.setFontSize(9);mut();doc.text((c.cName||"No customer name")+"  ·  "+fmtDate(c.qDate)+"  ·  internal, do not send",M,y+14);
+  y+=26;doc.setDrawColor(26,29,31);doc.setLineWidth(2);doc.line(M,y,PW-M,y);y+=16;
+  doc.setFontSize(9.5);ink();
+  doc.splitTextToSize(summaryLine(r)+" "+fmtFtIn(r.Wt)+" W x "+fmtFtIn(r.rackH)+" H x "+fmtIn(r.D)+" D. Uprights "+fmtIn(r.U)+", rail gap "+fmtIn(r.G)+", rows every "+fmtIn(r.P)+". Finish: "+FIN_NAMES[r.finish]+(c.color?" ("+c.color+")":"")+".",CW).forEach(s=>{doc.text(s,M,y);y+=12;});
+  y+=6;
+  const kp=[["Quote total",money(r.total)],["Your cost",money(Math.round(r.cost))],["Profit",money(Math.round(r.profit))],["Est. hours",r.hours.toFixed(1)],["Per hour",money(Math.round(r.hours?r.profit/r.hours:0))]];
+  const kw=CW/5;kp.forEach((k,i)=>{doc.setFont("helvetica","bold");doc.setFontSize(7);mut();doc.text(k[0].toUpperCase(),M+i*kw,y,{charSpace:.8});doc.setFontSize(14);ink();doc.text(k[1].replace("−","-"),M+i*kw,y+17);});
+  y+=44;
+  function table(title,heads,rows,widths,aligns){
+    if(y>690){doc.addPage();y=56;}
+    doc.setFont("helvetica","bold");doc.setFontSize(11);ink();doc.text(title.toUpperCase(),M,y);y+=12;
+    doc.setFontSize(7);mut();let x=M;heads.forEach((h,i)=>{doc.text(h.toUpperCase(),aligns[i]==="r"?x+widths[i]-4:x+(i?12:0),y,{align:aligns[i]==="r"?"right":"left",charSpace:.8});x+=widths[i];});
+    y+=5;doc.setDrawColor(26,29,31);doc.setLineWidth(1);doc.line(M,y,PW-M,y);y+=12;
+    doc.setFont("helvetica","normal");doc.setFontSize(9.5);ink();
+    rows.forEach(row=>{let x=M,lh=1;const cells=row.map((cell,i)=>{const ls=doc.splitTextToSize(String(cell),widths[i]-(i&&aligns[i]!=="r"?20:8));lh=Math.max(lh,ls.length);return ls;});
+      if(y+lh*12>750){doc.addPage();y=56;}
+      cells.forEach((ls,i)=>{ls.forEach((s,j)=>doc.text(s,aligns[i]==="r"?x+widths[i]-4:x+(i?12:0),y+j*12,{align:aligns[i]==="r"?"right":"left"}));x+=widths[i];});
+      y+=lh*12+2;doc.setDrawColor(220,224,226);doc.setLineWidth(.6);doc.line(M,y-8,PW-M,y-8);y+=4;});
+    y+=10;
+  }
+  table("Cut list",["Part","Qty","Length","Cut from"],r.pieces.map(p=>[p.part,p.qty,fmtIn(p.len),p.from]),[190,40,60,CW-290],["l","r","r","l"]);
+  const shopRows=r.shop.map(s=>[s.i,s.q,money(s.c)]);shopRows.push(["Materials total","",money(r.cost)]);
+  table("Shopping list",["Item","Qty","Est. cost"],shopRows,[CW-170,90,80],["l","r","r"]);
+  const hr=[["Cut, assemble, "+(r.mobile?"deliver":"install"),r.buildHrs.toFixed(1)+" hr"]];if(r.finHrs)hr.push(["Finish, about "+Math.round(r.allArea)+" sq ft of lumber",r.finHrs.toFixed(1)+" hr"]);
+  table("Hours",["Task","Hours"],hr,[CW-80,80],["l","r"]);
+  if(y>660){doc.addPage();y=56;}
+  doc.setFont("helvetica","bold");doc.setFontSize(11);ink();doc.text("BEFORE YOU CUT",M,y);y+=14;doc.setFont("helvetica","normal");doc.setFontSize(9.5);
+  r.warns.forEach(w=>{const ls=doc.splitTextToSize(w,CW-12);doc.text("•",M,y);ls.forEach((s,i)=>doc.text(s,M+10,y+i*12));y+=ls.length*12+3;});
+  return doc;
+}
+
+let downloads=null;
+async function savePDF(kind){
+  const btn=kind==="quote"?$("pdfQuote"):$("pdfShop");
+  if(!window.jspdf){toast("PDF library didn't load. Use Copy quote text instead.",true);return;}
+  const c=cfg();
+  const doc=kind==="quote"?buildQuotePDF():buildShopPDF();
+  const base=(kind==="quote"?"Quote ":"Shop sheet ")+(c.qNo||"")+(c.cName?" "+c.cName:"");
+  const filename=base.replace(/[\\/:*?"<>|]+/g,"").trim()+".pdf";
+  if(!downloads){
+    /* Opened as a plain file or website (not inside Claude): the browser can save directly. */
+    if(window.self===window.top){doc.save(filename);toast("Saved "+filename+".");return;}
+    toast("Saving files isn't available in this view. Use Copy quote text instead.",true);return;
+  }
+  btn.disabled=true;
+  try{const res=await downloads.save({filename,data:doc.output("blob")});toast(res&&res.status==="delivered"?"Sent.":"Saved "+filename+".");}
+  catch(e){const code=e&&e.code;
+    if(code==="declined")toast("Save canceled.");
+    else if(code==="rate_limited")toast("A save prompt is already open. Finish that one first.",true);
+    else toast("Couldn't save the PDF here. Use Copy quote text instead.",true);}
+  finally{btn.disabled=false;}
+}
+let tTimer;function toast(msg,bad){const t=$("toast");t.textContent=msg;t.style.color=bad?"var(--warn)":"var(--good)";clearTimeout(tTimer);tTimer=setTimeout(()=>{t.textContent="";},5000);}
+
+/* ---------- wire up ---------- */
+restore();buildSettings();
+document.querySelectorAll("[data-step]").forEach(b=>b.addEventListener("click",()=>{
+  const k=b.dataset.step,d=+b.dataset.d;const lim=k==="W"?[1,8]:[2,6];
+  state[k]=Math.min(lim[1],Math.max(lim[0],state[k]+d));render();}));
+$("f").addEventListener("input",e=>{if(!e.target.dataset.path)render();});
+$("f").addEventListener("change",e=>{if(!e.target.dataset.path)render();});
+$("f").addEventListener("submit",e=>e.preventDefault());
+function tab(which){const q=which==="q";$("tabQ").setAttribute("aria-selected",q);$("tabS").setAttribute("aria-selected",!q);$("viewQ").hidden=!q;$("viewS").hidden=q;}
+$("tabQ").addEventListener("click",()=>tab("q"));$("tabS").addEventListener("click",()=>tab("s"));
+$("newQuote").addEventListener("click",()=>{
+  ["cName","cAddr","cPhone","cEmail","notes","adjLabel","finColor"].forEach(id=>$(id).value="");
+  $("delivery").value=0;$("adjAmt").value=0;$("qDate").value=todayISO();
+  const cur=$("qNo").value,d=defaultQNo();
+  const m=cur.match(/^(.*-)(\d+)$/);
+  $("qNo").value=(m&&cur.slice(0,d.length-2)===d.slice(0,d.length-2))?m[1]+String(+m[2]+1).padStart(2,"0"):d;
+  render();toast("Cleared for a new quote.");});
+$("copyText").addEventListener("click",async()=>{
+  const txt=quoteText();
+  try{await navigator.clipboard.writeText(txt);toast("Quote text copied. Paste it into an email or text.");}
+  catch(e){const ta=document.createElement("textarea");ta.value=txt;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
+    let ok=false;try{ok=document.execCommand("copy");}catch(_){}document.body.removeChild(ta);toast(ok?"Quote text copied.":"Copy was blocked here. Use Save quote PDF instead.",!ok);}
+});
+$("pdfQuote").addEventListener("click",()=>savePDF("quote"));
+$("pdfShop").addEventListener("click",()=>savePDF("shop"));
+render();
+(async()=>{try{downloads=window.claude&&window.claude.use?await window.claude.use("downloads"):null;}catch(e){downloads=null;}
+  if(!downloads){$("pdfQuote").title="PDF saving isn't available in this view";$("pdfShop").title=$("pdfQuote").title;}})();
+
+})();
+</script>
+
+</body>
+</html>
