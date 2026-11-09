@@ -87,13 +87,19 @@ def cmd_policies(args):
         if ebay_api.CONFIG_PATH.exists() else {}
     cfg = ebay_api.load_config()
     chosen = {"shipping": args.shipping, "payment": args.payment, "return": args.return_}
-    if any(chosen.values()):
+    by_weight = {"shipping_light": args.shipping_light, "shipping_heavy": args.shipping_heavy,
+                 "threshold_lb": args.threshold_lb}
+    if any(chosen.values()) or any(v is not None for v in by_weight.values()):
         raw.setdefault("policies", {})
         for kind, value in chosen.items():
             if value:
                 raw["policies"][kind] = value
+        raw["shipping_by_weight"] = {**ebay_api.CONFIG_TEMPLATE["shipping_by_weight"],
+                                     **raw.get("shipping_by_weight", {}),
+                                     **{k: v for k, v in by_weight.items() if v is not None}}
         ebay_api.save_config({**ebay_api.CONFIG_TEMPLATE, **raw})
-        out(f"Saved to {ebay_api.CONFIG_PATH}: {raw['policies']}")
+        out(f"Saved to {ebay_api.CONFIG_PATH}: {raw['policies']}, "
+            f"by weight: {raw['shipping_by_weight']}")
         return 0
 
     policies = EbayClient(cfg).business_policies()
@@ -106,6 +112,7 @@ def cmd_policies(args):
             out(f" {mark} {pid}  {name}")
     out("\n* = currently configured. To choose:")
     out("  python ebay_lister.py policies --shipping ID --payment ID --return ID")
+    out("  shipping by weight:  --shipping-light ID --shipping-heavy ID --threshold-lb 4")
     return 0
 
 
@@ -124,6 +131,13 @@ def cmd_cloud_env(args):
         "EBAY_LOCATION": cfg["location"],
         **{var: cfg["policies"].get(kind) for kind, var in ebay_api.POLICY_ENV.items()},
     }
+    sbw = cfg.get("shipping_by_weight") or {}
+    if sbw.get("shipping_light") and sbw.get("shipping_heavy"):
+        values.update({"EBAY_SHIPPING_POLICY_LIGHT": sbw["shipping_light"],
+                       "EBAY_SHIPPING_POLICY_HEAVY": sbw["shipping_heavy"],
+                       "EBAY_SHIPPING_THRESHOLD_LB": f"{float(sbw.get('threshold_lb') or 4):g}"})
+        if not values["EBAY_SHIPPING_POLICY"]:
+            del values["EBAY_SHIPPING_POLICY"]
     missing = [k for k, v in values.items() if not v]
     if missing:
         hint = " Run `auth` first." if "EBAY_REFRESH_TOKEN" in missing else ""
@@ -505,6 +519,9 @@ def build_parser():
     a.add_argument("--shipping")
     a.add_argument("--payment")
     a.add_argument("--return", dest="return_")
+    a.add_argument("--shipping-light", help="shipping policy for items at or under the threshold")
+    a.add_argument("--shipping-heavy", help="shipping policy for items over the threshold")
+    a.add_argument("--threshold-lb", type=float, help="weight threshold in lb (default 4)")
     a.set_defaults(func=cmd_policies)
 
     sub.add_parser("cloud-env", help="print settings for a cloud environment") \

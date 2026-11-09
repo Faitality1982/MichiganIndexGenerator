@@ -55,6 +55,16 @@ python ebay_lister.py policies --shipping 1234567890 --payment 2345678901 --retu
 
 The first command lists your shipping, payment and return policies with their IDs. The second saves the ones you pick; every listing uses them.
 
+### Optional: shipping policy by weight
+
+To use one shipping policy for light items and another for heavier ones:
+
+```
+python ebay_lister.py policies --shipping-light 1111111111 --shipping-heavy 2222222222 --threshold-lb 4
+```
+
+Items whose packed weight (`routing.weight_lb` in listing.json) is over the threshold use the heavy policy; the rest use the light one. `"shipping_policy": "ID"` in an item's listing.json overrides both.
+
 ### Optional: try it in the sandbox first
 
 eBay's sandbox is a fake marketplace for testing. Create a **Sandbox** keyset and a sandbox test user at developer.ebay.com, set `"environment": "sandbox"` with the sandbox keys, then run `auth` and `policies` again. The sandbox's category suggestions and price data are thin, so use `category --id` there if you need to. Set it back to `"production"` when you're done.

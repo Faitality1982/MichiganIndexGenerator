@@ -77,7 +77,8 @@ For a batch (a parent folder containing one subfolder per item), do steps 1-8 fo
 - `weight_lb` and `dims_in` are the packed size. Use the user's measurements when they gave them; otherwise estimate, and say so when you report the route.
 - `local_only`: a short reason when it can't ship sensibly at all (refrigerator, washer, sofa, piano, glass tabletop). Leave it empty otherwise.
 - `ebay_price_est`: base it on `comps` when eBay setup is done (asking prices, so lean low), otherwise on what you know, and say which.
-- `ship_cost_est`: a rough label cost for that weight and size. `free_shipping` is true only if the user's shipping policy is free shipping.
+- `ship_cost_est`: a rough label cost for that weight and size. `free_shipping` is true only if the user's shipping policy is free shipping. When config.json has `shipping_by_weight` set (the user's own setup: free domestic shipping, ground at or under the threshold, Priority over it), set `free_shipping` to true and estimate the label cost for that service.
+- `weight_lb` also picks the eBay shipping policy when `shipping_by_weight` is set, so it is required for eBay items then. For a one-off (local pickup, freight), set `"shipping_policy": "<policy ID>"` at the top level of listing.json.
 - `local_price_est`: what it would realistically sell for on Facebook locally. Facebook has no price data, so this is your estimate; say so.
 
 The rules, in order: local-only, over 70 lb, or over 130 in length + girth goes to Facebook. eBay netting under $25 goes to Facebook. eBay wins when its net (after about 13.6% plus $0.40 in fees, and shipping if free) beats the local price by $15 or 25%, whichever is more. eBay ahead by less than that is ASK; otherwise Facebook. The thresholds and fee rate can be changed in config.json under `"routing"`.

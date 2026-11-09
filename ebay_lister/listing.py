@@ -270,7 +270,11 @@ def validate(folder, listing, cfg):
 
     if not cfg.get("postal_code"):
         errors.append("postal_code is empty in config.json")
-    for kind in ("shipping", "payment", "return"):
+    try:
+        shipping_policy(listing, cfg)
+    except ValueError as err:
+        errors.append(str(err))
+    for kind in ("payment", "return"):
         if not cfg["policies"].get(kind):
             errors.append(f"no {kind} policy in config.json - run `policies`")
 
@@ -283,6 +287,23 @@ def validate(folder, listing, cfg):
 # ══════════════════════════════════════════════════════════════════════════════
 #  TRADING API XML
 # ══════════════════════════════════════════════════════════════════════════════
+
+def shipping_policy(listing, cfg):
+    """Shipping policy ID for this item: listing["shipping_policy"] if set, else
+    by packed weight when shipping_by_weight is configured, else the default."""
+    if str(listing.get("shipping_policy") or "").strip():
+        return str(listing["shipping_policy"]).strip()
+    by_weight = cfg.get("shipping_by_weight") or {}
+    light, heavy = by_weight.get("shipping_light"), by_weight.get("shipping_heavy")
+    if light and heavy:
+        weight = (listing.get("routing") or {}).get("weight_lb")
+        if isinstance(weight, bool) or not isinstance(weight, (int, float)) or weight <= 0:
+            raise ValueError("routing.weight_lb is not set - shipping policy depends on weight")
+        return heavy if weight > float(by_weight.get("threshold_lb") or 4) else light
+    if cfg["policies"].get("shipping"):
+        return cfg["policies"]["shipping"]
+    raise ValueError("no shipping policy in config.json - run `policies`")
+
 
 def new_uuid():
     """Item.UUID: 32 hex chars, uppercase. Makes AddItem safe to retry."""
@@ -351,7 +372,7 @@ def build_item_xml(call_name, listing, cfg, picture_urls, item_uuid):
                 _add(nvl, "Value", v)
 
     profiles = _add(item, "SellerProfiles")
-    _add(_add(profiles, "SellerShippingProfile"), "ShippingProfileID", cfg["policies"]["shipping"])
+    _add(_add(profiles, "SellerShippingProfile"), "ShippingProfileID", shipping_policy(listing, cfg))
     _add(_add(profiles, "SellerReturnProfile"), "ReturnProfileID", cfg["policies"]["return"])
     _add(_add(profiles, "SellerPaymentProfile"), "PaymentProfileID", cfg["policies"]["payment"])
 

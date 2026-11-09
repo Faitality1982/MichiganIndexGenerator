@@ -45,6 +45,9 @@ CONFIG_TEMPLATE = {
     "postal_code": "",                # where the item ships from
     "location": "",                   # e.g. "Port Huron, MI"
     "policies": {"shipping": "", "payment": "", "return": ""},
+    # Optional: pick the shipping policy by packed weight instead. Items over
+    # the threshold use shipping_heavy, the rest shipping_light.
+    "shipping_by_weight": {"threshold_lb": 4, "shipping_light": "", "shipping_heavy": ""},
     "description_footer_html": "",
 }
 
@@ -57,6 +60,11 @@ ENV_OVERRIDES = {
     "ru_name": "EBAY_RUNAME",
     "postal_code": "EBAY_POSTAL_CODE",
     "location": "EBAY_LOCATION",
+}
+WEIGHT_ENV = {
+    "shipping_light": "EBAY_SHIPPING_POLICY_LIGHT",
+    "shipping_heavy": "EBAY_SHIPPING_POLICY_HEAVY",
+    "threshold_lb": "EBAY_SHIPPING_THRESHOLD_LB",
 }
 POLICY_ENV = {
     "shipping": "EBAY_SHIPPING_POLICY",
@@ -110,6 +118,12 @@ def load_config():
     for kind, var in POLICY_ENV.items():
         if os.environ.get(var):
             cfg["policies"][kind] = os.environ[var]
+    cfg["shipping_by_weight"] = {**CONFIG_TEMPLATE["shipping_by_weight"],
+                                 **raw.get("shipping_by_weight", {})}
+    for key, var in WEIGHT_ENV.items():
+        if os.environ.get(var):
+            cfg["shipping_by_weight"][key] = (float(os.environ[var]) if key == "threshold_lb"
+                                              else os.environ[var])
     if cfg["environment"] not in HOSTS:
         raise EbayError(f'config.json "environment" must be "production" or '
                         f'"sandbox", not "{cfg["environment"]}"')
