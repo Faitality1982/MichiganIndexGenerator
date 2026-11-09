@@ -110,6 +110,18 @@ The fee rate is approximate. Check it against eBay's fee page and change it, or 
 
 eBay listings that offer shipping can also show up on Facebook Marketplace automatically, with checkout on eBay, so eBay items get Facebook buyers too.
 
+## Photos from your phone
+
+`add` copies photos into an item folder and creates it, so loose photos (chat attachments, files with no extension, a OneDrive upload folder) can be listed without sorting them by hand:
+
+```
+python ebay_lister.py add  ..\listings\brass-lamp  C:\path\to\photo1  C:\path\to\photo2
+```
+
+## Running in a cloud session
+
+With no `config.json`, the tool reads its settings from environment variables: `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, `EBAY_RUNAME`, `EBAY_REFRESH_TOKEN`, `EBAY_POSTAL_CODE`, `EBAY_LOCATION`, `EBAY_SHIPPING_POLICY`, `EBAY_PAYMENT_POLICY`, `EBAY_RETURN_POLICY` (and optionally `EBAY_ENVIRONMENT`). After `auth` and `policies` on your PC, `python ebay_lister.py cloud-env` prints all of them to copy into the cloud environment's settings. They include your Cert ID and sign-in, so never paste them into a chat. The environment's network access must allow `api.ebay.com`, `auth.ebay.com` and `apim.ebay.com`.
+
 ## Good to know
 
 - **Fees.** `verify` shows the insertion and upgrade fees eBay reports. Final value fees are charged only when the item sells.

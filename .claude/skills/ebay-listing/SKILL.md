@@ -15,7 +15,7 @@ Skip this for items that route to Facebook; `route` and `facebook` work without 
 
 ## Per item
 
-The user gives you a folder with one item's photos in it. If they give you loose photos instead, ask them to put the photos in their own folder (one folder per item).
+The user gives you a folder with one item's photos in it. If they send loose photos instead (attachments in a chat, files with no extension, or a pile in one folder), make the item folder yourself: `add "listings/<short-item-name>" <photo> <photo> ...` creates the folder and copies the photos in, named by their real image type. Ask which photos go together only if they could be more than one item.
 
 1. **Prep the photos.** Run `python ebay_lister/ebay_lister.py prep "<folder>"`. It writes upright, resized JPEGs to `<folder>/prepared/` with GPS and other metadata removed, and creates a `listing.json` template.
 2. **Look at every photo** in `prepared/` with the Read tool. Zoom in mentally on labels, maker's marks, model and serial plates, signatures, tags, and damage. If something that matters is unreadable (a hallmark, a model number), ask for a close-up. Don't guess.

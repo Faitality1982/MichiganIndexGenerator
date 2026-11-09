@@ -14,6 +14,7 @@ An item folder looks like:
 import hashlib
 import json
 import re
+import shutil
 import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -117,6 +118,34 @@ def source_photos(folder):
     return sorted((p for p in folder.iterdir()
                    if p.is_file() and p.suffix.lower() in PHOTO_EXTS),
                   key=lambda p: natural_key(p.name))
+
+
+def add_photos(folder, sources):
+    """Copy photos into an item folder, naming each by its real image type.
+    Uploads from a chat often have no extension. Returns the new names."""
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    taken = {p.name.lower() for p in folder.iterdir()}
+    added, skipped = [], []
+    for src in map(Path, sources):
+        try:
+            with Image.open(src) as img:
+                fmt = (img.format or "").upper()
+        except Exception:
+            skipped.append(src.name)
+            continue
+        ext = {"JPEG": ".jpg", "MPO": ".jpg", "HEIF": ".heic"}.get(fmt, f".{fmt.lower()}")
+        if ext not in PHOTO_EXTS:
+            skipped.append(src.name)
+            continue
+        n = len(source_photos(folder)) + 1
+        while f"photo_{n:02d}{ext}" in taken:
+            n += 1
+        name = f"photo_{n:02d}{ext}"
+        shutil.copyfile(src, folder / name)
+        taken.add(name)
+        added.append(name)
+    return added, skipped
 
 
 def prepare_photos(folder):

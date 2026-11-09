@@ -8,8 +8,10 @@ One-time setup:
     python ebay_lister.py setup          create ~/.ebay_lister/config.json
     python ebay_lister.py auth           sign in to eBay (good ~18 months)
     python ebay_lister.py policies       pick shipping/payment/return policies
+    python ebay_lister.py cloud-env      print settings for a cloud environment
 
 Per item:
+    python ebay_lister.py add      FOLDER PHOTO...  copy photos in (e.g. chat uploads)
     python ebay_lister.py prep     FOLDER   resize/rotate photos, strip GPS, make listing.json
     python ebay_lister.py route    FOLDER   eBay or Facebook Marketplace?
     python ebay_lister.py facebook FOLDER   write the Facebook draft to paste into Seller
@@ -22,6 +24,7 @@ Per item:
 
 import argparse
 import json
+import os
 import statistics
 import sys
 from datetime import datetime
@@ -106,9 +109,45 @@ def cmd_policies(args):
     return 0
 
 
+def cmd_cloud_env(args):
+    """Everything a cloud session needs, as environment variables. Printed for
+    the user to copy into their cloud environment's settings, never into a chat."""
+    cfg = ebay_api.load_config()
+    refresh = os.environ.get("EBAY_REFRESH_TOKEN") or ebay_api.refresh_token(cfg["environment"])
+    values = {
+        "EBAY_ENVIRONMENT": cfg["environment"],
+        "EBAY_CLIENT_ID": cfg["client_id"],
+        "EBAY_CLIENT_SECRET": cfg["client_secret"],
+        "EBAY_RUNAME": cfg["ru_name"],
+        "EBAY_REFRESH_TOKEN": refresh,
+        "EBAY_POSTAL_CODE": cfg["postal_code"],
+        "EBAY_LOCATION": cfg["location"],
+        **{var: cfg["policies"].get(kind) for kind, var in ebay_api.POLICY_ENV.items()},
+    }
+    missing = [k for k, v in values.items() if not v]
+    if missing:
+        hint = " Run `auth` first." if "EBAY_REFRESH_TOKEN" in missing else ""
+        hint += " Run `policies` first." if any("POLICY" in m for m in missing) else ""
+        raise EbayError(f"Not ready - missing: {', '.join(missing)}.{hint}")
+    out("Copy these into your cloud environment's environment variables.")
+    out("They include your Cert ID and eBay sign-in: never paste them into a chat.\n")
+    for k, v in values.items():
+        out(f"{k}={v}")
+    return 0
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  PER-ITEM
 # ══════════════════════════════════════════════════════════════════════════════
+
+def cmd_add(args):
+    folder = Path(args.folder).expanduser().resolve()
+    added, skipped = lst.add_photos(folder, args.photos)
+    out(f"Added {len(added)} photo(s) to {folder}: {', '.join(added)}")
+    if skipped:
+        out(f"Skipped (not a photo): {', '.join(skipped)}")
+    return 0 if added else 1
+
 
 def cmd_prep(args):
     folder = _folder(args.folder)
@@ -467,6 +506,14 @@ def build_parser():
     a.add_argument("--payment")
     a.add_argument("--return", dest="return_")
     a.set_defaults(func=cmd_policies)
+
+    sub.add_parser("cloud-env", help="print settings for a cloud environment") \
+        .set_defaults(func=cmd_cloud_env)
+
+    a = sub.add_parser("add", help="copy photos into an item folder (creates it)")
+    a.add_argument("folder")
+    a.add_argument("photos", nargs="+")
+    a.set_defaults(func=cmd_add)
 
     a = sub.add_parser("prep", help="prepare photos and create listing.json")
     a.add_argument("folder")

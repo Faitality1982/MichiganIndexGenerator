@@ -48,11 +48,20 @@ CONFIG_TEMPLATE = {
     "description_footer_html": "",
 }
 
-# Environment variables win over config.json (useful for cloud sessions).
+# Environment variables win over config.json. In a cloud session with no
+# config.json, they are the whole config (see `cloud-env`).
 ENV_OVERRIDES = {
+    "environment": "EBAY_ENVIRONMENT",
     "client_id": "EBAY_CLIENT_ID",
     "client_secret": "EBAY_CLIENT_SECRET",
     "ru_name": "EBAY_RUNAME",
+    "postal_code": "EBAY_POSTAL_CODE",
+    "location": "EBAY_LOCATION",
+}
+POLICY_ENV = {
+    "shipping": "EBAY_SHIPPING_POLICY",
+    "payment": "EBAY_PAYMENT_POLICY",
+    "return": "EBAY_RETURN_POLICY",
 }
 
 HOSTS = {
@@ -86,15 +95,21 @@ class EbayError(Exception):
 
 
 def load_config():
-    if not CONFIG_PATH.exists():
+    if CONFIG_PATH.exists():
+        raw = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    elif os.environ.get("EBAY_CLIENT_ID"):
+        raw = {}                           # cloud session: environment variables only
+    else:
         raise EbayError(f"No config found at {CONFIG_PATH}\n"
                         f"Run:  python ebay_lister.py setup")
-    raw = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     cfg = {**CONFIG_TEMPLATE, **raw}
     cfg["policies"] = {**CONFIG_TEMPLATE["policies"], **raw.get("policies", {})}
     for key, var in ENV_OVERRIDES.items():
         if os.environ.get(var):
             cfg[key] = os.environ[var]
+    for kind, var in POLICY_ENV.items():
+        if os.environ.get(var):
+            cfg["policies"][kind] = os.environ[var]
     if cfg["environment"] not in HOSTS:
         raise EbayError(f'config.json "environment" must be "production" or '
                         f'"sandbox", not "{cfg["environment"]}"')
@@ -104,6 +119,11 @@ def load_config():
 def save_config(cfg):
     HOME.mkdir(parents=True, exist_ok=True)
     CONFIG_PATH.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
+
+
+def refresh_token(env):
+    """The saved eBay sign-in (refresh token) for env, or None."""
+    return (_load_tokens().get(env) or {}).get("refresh_token")
 
 
 def _load_tokens():
